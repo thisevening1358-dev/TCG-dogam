@@ -10,5 +10,5 @@ assert len(ko) == len(en)
 src = (here / "app.html").read_text(encoding="utf-8")
 js = "const KO_NAMES=" + json.dumps(ko, ensure_ascii=False) + ";\nconst EN_NAMES=" + json.dumps(en, ensure_ascii=False) + ";"
 out = src.replace("/*__NAMES__*/", js)
-(here.parent / "PokeTCG-Dex.html").write_text(out, encoding="utf-8")
+(here.parent / "index.html").write_text(out, encoding="utf-8")
 print("built", len(out), "bytes")
