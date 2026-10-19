@@ -132,6 +132,8 @@ input{font:inherit;color:inherit}
 
 /* ---------- Toolbar / chips ---------- */
 .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-block:8px 18px}
+.seg.ed button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.edmark{display:inline-block;margin-right:5px;padding:0 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:10.5px;font-weight:700;vertical-align:1px}
 .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;padding-block:2px;min-width:0;flex:1}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;scroll-snap-align:start;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;transition:background .2s,color .2s,border-color .2s,transform .15s}
@@ -461,7 +463,13 @@ footer a{color:var(--muted)}
 </script>
 <script>
 "use strict";
-const API = "https://api.tcgdex.net/v2/en";
+const API_ROOT = "https://api.tcgdex.net/v2/";
+const API = API_ROOT + "en";
+// Japanese cards and sets live in a separate TCGdex locale; inside the app their ids carry a "ja:" prefix.
+const isJa = id => /^ja:/.test(id || "");
+const rawId = id => String(id || "").replace(/^ja:/, "");
+const edOf = id => isJa(id) ? "ja" : "en";
+const apiFor = id => API_ROOT + edOf(id);
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -560,21 +568,78 @@ function fixCard(c) {
   return { ...c, image: c.image || `img/30th-c/${n}`, localId: "CC" + n, _sortN: 10000 + +n,
     rarity: c.rarity && c.rarity !== "None" ? c.rarity : "Classic Collection", dexId: c.dexId || CLASSIC_DEX[n] };
 }
-const getCard = id => cached("card:" + id, 12 * HOUR, () => fetchJSON(`${API}/cards/${encodeURIComponent(id)}`)).then(fixCard);
-const getSet = id => cached("set3:" + id, 24 * HOUR, async () => {
+/* Japanese card art: TCGdex only has it for some sets, so MEGA-era art comes from the official Japanese card
+   database (data/jp-img.json, matched by set + number at build time). */
+const JP_IMG_BASE = "https://www.pokemon-card.com/assets/images/card_images/large/";
+let JP_IMG = null;
+const loadJpImg = () => JP_IMG || (JP_IMG = fetch("data/jp-img.json").then(r => r.ok ? r.json() : {}).catch(() => ({})));
+async function jpImage(code, localId) {
+  const m = await loadJpImg();
+  return m[code] && m[code][localId] ? JP_IMG_BASE + m[code][localId] : undefined;
+}
+async function jaCard(c) {
+  if (!c) return c;
+  const code = c.set ? c.set.id : rawId(c.id).slice(0, rawId(c.id).lastIndexOf("-"));
+  const x = SET_EXTRA.ja[code] || {};
+  return { ...c, id: "ja:" + rawId(c.id), image: c.image || await jpImage(code, c.localId),
+    set: c.set ? { ...c.set, id: "ja:" + c.set.id, name: x.n || c.set.name } : c.set };
+}
+const getCard = id => cached("card:" + id, 12 * HOUR, () => fetchJSON(`${apiFor(id)}/cards/${encodeURIComponent(rawId(id))}`)).then(c => isJa(id) ? jaCard(c) : fixCard(c));
+const getSet = id => isJa(id) ? getJaSet(id) : getEnSet(id);
+async function getJaSet(id) {
+  const code = rawId(id);
+  const s = await cached("set:" + id, 24 * HOUR, () => fetchJSON(`${API_ROOT}ja/sets/${encodeURIComponent(code)}`));
+  if (!s) return s;
+  const x = SET_EXTRA.ja[code] || {};
+  const m = (s.cards || []).some(c => !c.image) ? await loadJpImg() : {}, imgs = m[code] || {};
+  return { ...s, id, name: x.n || s.name, enName: x.en, logo: x.logo || s.logo,
+    cards: (s.cards || []).map(c => ({ ...c, id: "ja:" + c.id, image: c.image || (imgs[c.localId] ? JP_IMG_BASE + imgs[c.localId] : undefined) })) };
+}
+const getEnSet = id => cached("set3:" + id, 24 * HOUR, async () => {
   const s = await fetchJSON(`${API}/sets/${encodeURIComponent(id)}`);
   if (s && SET_MERGE[id]) {
     const subs = await Promise.all(SET_MERGE[id].map(x => fetchJSON(`${API}/sets/${x}`).catch(() => null)));
     subs.forEach(x => { if (x && x.cards) { s.cards = [...(s.cards || []), ...x.cards]; s.cardCount = { ...s.cardCount, total: (s.cardCount.total || 0) + x.cards.length }; s.merged = (s.merged || 0) + x.cards.length; } });
   }
   if (s && SET_NAME[id]) s.name = SET_NAME[id];
+  if (s && !s.logo) s.logo = SET_EXTRA.enLogo[id];
   if (s && s.cards) s.cards = s.cards.map(fixCard);
   return s;
 });
 
-let CATALOG = null;
-async function loadCatalog() {
-  if (CATALOG) return CATALOG;
+const CATS = { en: null, ja: null };
+const SERIES_KO_JA = { PMCG:"포켓몬 카드게임 (구판)", neo:"neo", VS:"VS", web:"web", e:"e카드", ADV:"ADV", PCG:"PCG", L:"LEGEND", XY:"XY", XYb:"XY BREAK", SM:"썬&문", S:"소드&실드", M:"MEGA", SV:"스칼렛&바이올렛" };
+const JA_ERA = { PMCG:"vintage", neo:"vintage", VS:"vintage", web:"vintage", e:"vintage", ADV:"older", PCG:"older", L:"older", XY:"mid", XYb:"mid", SM:"mid", S:"modern", M:"modern", SV:"modern" };
+function loadCatalog(ed = "en") {
+  return ed === "ja" ? loadJaCatalog() : loadEnCatalog();
+}
+// Japanese sets: names, release dates and logos come from SET_EXTRA (Bulbapedia), since TCGdex has none of the logos
+// and some wrong names. Sets TCGdex lists without any cards (and the stray Chinese CS sets) are hidden.
+async function loadJaCatalog() {
+  if (CATS.ja) return CATS.ja;
+  const series = await cached("ja:series", 24 * HOUR, () => fetchJSON(`${API_ROOT}ja/series`));
+  const details = await pool(series, 8, s => cached("ja:serie:" + s.id, 24 * HOUR, () => fetchJSON(`${API_ROOT}ja/series/${encodeURIComponent(s.id)}`)));
+  const empty = new Set(SET_EXTRA.jaEmpty), out = [];
+  details.forEach(d => {
+    if (!d || !d.sets) return;
+    const sets = d.sets.filter(x => !empty.has(x.id) && !/^CS/.test(x.id)).map(x => {
+      const e = SET_EXTRA.ja[x.id] || {};
+      return { ...x, id: "ja:" + x.id, name: e.n || x.name, en: e.en || "", date: e.d || "", logo: e.logo || x.logo, serie: d.id, kind: jaKind(x, e) };
+    }).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    if (sets.length) out.push({ id: "ja:" + d.id, name: d.name, ko: SERIES_KO_JA[d.id] || d.name, date: sets[0].date, sets });
+  });
+  out.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  CATS.ja = out;
+  return out;
+}
+function jaKind(x, e) {
+  const n = x.name || "";
+  if (/-P$/.test(x.id) || n.includes("プロモ")) return "promo";
+  if (/^(MC|SVK|SVL)/.test(x.id) || /スターター|デッキ/.test(n)) return "other";
+  return "main";
+}
+async function loadEnCatalog() {
+  if (CATS.en) return CATS.en;
   const series = await cached("series", 24 * HOUR, () => fetchJSON(`${API}/series`));
   const list = series.filter(s => !EXCLUDED_SERIES.has(s.id));
   const details = await pool(list, 8, s => cached("serie:" + s.id, 24 * HOUR, () => fetchJSON(`${API}/series/${s.id}`)));
@@ -584,14 +649,14 @@ async function loadCatalog() {
     const byId = Object.fromEntries(d.sets.map(s => [s.id, s]));
     const total = s => (SET_MERGE[s.id] || []).reduce((a, x) => a + (byId[x] && byId[x].cardCount ? byId[x].cardCount.total : 0), s.cardCount ? s.cardCount.total : 0);
     out.push({ id: d.id, name: d.name, ko: SERIES_KO[d.id] || d.name, date: d.releaseDate || "1990-01-01",
-      sets: d.sets.filter(s => !SET_ALIAS[s.id]).map(s => ({ ...s, name: SET_NAME[s.id] || s.name, cardCount: { ...s.cardCount, total: total(s) }, serie: d.id, kind: setKind(s, d.id) })) });
+      sets: d.sets.filter(s => !SET_ALIAS[s.id]).map(s => ({ ...s, name: SET_NAME[s.id] || s.name, logo: s.logo || SET_EXTRA.enLogo[s.id], cardCount: { ...s.cardCount, total: total(s) }, serie: d.id, kind: setKind(s, d.id) })) });
   });
   // Newest series first; side collections (McDonald's, trainer kits, misc) go last.
   const side = id => ["mc", "tk", "misc"].includes(id) ? 1 : 0;
   out.sort((a, b) => side(a.id) - side(b.id) || (b.date || "").localeCompare(a.date || ""));
   // Within a series the API order is release order, so newest first means reversed.
   out.forEach(s => s.sets.reverse());
-  CATALOG = out;
+  CATS.en = out;
   return out;
 }
 function setKind(s, serie) {
@@ -602,10 +667,11 @@ function setKind(s, serie) {
 }
 function findSet(id) {
   id = SET_ALIAS[id] || id;
-  for (const s of CATALOG || []) for (const x of s.sets) if (x.id === id) return { ...x, serieName: s.name, serieKo: s.ko };
+  for (const s of CATS[edOf(id)] || []) for (const x of s.sets) if (x.id === id) return { ...x, serieName: s.name, serieKo: s.ko };
   return null;
 }
-const img = (base, q = "low") => base ? `${base}/${q}.webp` : "";
+// TCGdex image bases get a quality suffix; full image URLs (official Japanese art) are used as is.
+const img = (base, q = "low") => !base ? "" : /\.(jpe?g|png|webp)$/i.test(base) ? base : `${base}/${q}.webp`;
 const logo = base => base ? `${base}.webp` : "";
 
 /* ================= rarity ================= */
@@ -642,6 +708,11 @@ function koName(card) {
   for (const k in KO_PREFIX) if (card.name.startsWith(k)) { pre = KO_PREFIX[k]; break; }
   const m = card.name.match(SUFFIX_RE);
   return pre + base + (m ? " " + m[1].replace(/^-/, "") : "");
+}
+function koToJa(q) {
+  const en = koToEn(q);
+  const i = en ? EN_NAMES.indexOf(en) : -1;
+  return i >= 0 ? JA_NAMES[i] : null;
 }
 function koToEn(q) {
   if (typeof KO_NAMES === "undefined" || !/[가-힣]/.test(q)) return null;
@@ -732,6 +803,10 @@ const GRADE_FLOOR = [12, 25, 15, 20, 35, 45, 120, 18, 30, 18];
 const ERA_ERR = { modern: .4, mid: .5, older: .6, vintage: .7 };
 const ERA_KO = { modern: "소드&실드 이후", mid: "BW~썬&문", older: "EX~하트골드", vintage: "WotC 시절(1999~2003)" };
 function cardEra(card) {
+  if (card && isJa(card.id)) {
+    const s = findSet(card.set && card.set.id), code = rawId(card.set && card.set.id);
+    return JA_ERA[s ? s.serie : code.replace(/\d.*$/, "")] || (/^CP/.test(code) ? "mid" : "modern");
+  }
   const id = (card && card.set && card.set.id || "").toLowerCase();
   const s = findSet(card && card.set && card.set.id), serie = s ? s.serie : "";
   const key = ["mc", "tk", "misc", ""].includes(serie) ? id : serie;
@@ -759,9 +834,9 @@ function gradeHTML(card, est, ed = "영문판") {
    narrowed by HP, rarity and suffix; its Cardmarket figures are the real price. With no matching data the price is
    derived from the other edition with a rough discount and a wider error, and is labelled as an estimate. */
 const GQL = "https://api.tcgdex.net/v2/graphql";
-const EDS = [["en", "영문판"], ["ja", "일본판"], ["ko", "한국판"]];
+const EDS = [["en", "북미판"], ["ja", "일본판"], ["ko", "한국판"]];
 const ED_KO = Object.fromEntries(EDS);
-const ED_FROM = { ja: ["en", .75], ko: ["ja", .6] };
+const ED_FROM = { ja: ["en", .75], ko: ["ja", .6], en: ["ja", 1 / .75] };
 let ED_CUR = ls.get("ed", "en");
 if (!ED_KO[ED_CUR]) ED_CUR = "en";
 async function gql(query) {
@@ -797,10 +872,12 @@ function deriveEd(base, k) {
   const err = Math.min(.9, Math.hypot(base.est.err, .35)), u = base.est.usd * k;
   return { usd: u, err, lo: u * (1 - err), hi: u * (1 + err), src: {}, n: 0 };
 }
-async function editionPrices(card, enEst) {
-  const out = { en: { est: enEst, real: !!enEst } };
-  const twins = await Promise.all(["ja", "ko"].map(l => findTwin(card, l).catch(() => ({ none: true }))));
-  ["ja", "ko"].forEach((l, i) => {
+async function editionPrices(card, ownEst, base = "en") {
+  const out = { [base]: { est: ownEst, real: !!ownEst, own: true } };
+  // Order matters: each derived price leans on one computed before it (ja <- en, ko <- ja, en <- ja).
+  const others = ["ja", "ko", "en"].filter(l => l !== base);
+  const twins = await Promise.all(others.map(l => findTwin(card, l).catch(() => ({ none: true }))));
+  others.forEach((l, i) => {
     const twin = twins[i].none ? null : twins[i], real = twin && estimate(twin);
     const [from, k] = ED_FROM[l];
     out[l] = real ? { est: real, real: true, twin } : { est: deriveEd(out[from], k), real: false, twin, from, k };
@@ -817,14 +894,14 @@ function cmSources(cm) {
 }
 function edBodyHTML(k, d) {
   const label = ED_KO[k], head = `<small>${label} 예상 시세 (${CUR_KO[CUR]})</small>`;
-  if (k === "en") {
+  if (d && d.own) {
     const est = d.est;
     return head + (est ? `<div class="big"><b>${money(est.usd)}</b><span>±${Math.round(est.err * 100)}%</span></div>${rangeHTML(est)}
         <div class="sources">
           ${cmSources(est.src.cm)}
           ${est.src.tp ? `<div><span>TCGPlayer 마켓</span><b>${usd(est.src.tp.market)}</b></div><div><span>TCGPlayer 범위</span><b>${usd(est.src.tp.low)}~${usd(est.src.tp.high)}</b></div>` : ""}
         </div>
-        <p class="note">시세 신호 ${est.n}개의 중앙값이며, 신호 간 편차로 오차율을 계산했어요. 미국·유럽 거래 기준(미등급, NM)이라 국내 시세와 다를 수 있어요.${est.src.cm && est.src.cm.updated ? ` 갱신 ${esc(est.src.cm.updated.slice(0, 10))}.` : ""}</p>`
+        <p class="note">시세 신호 ${est.n}개의 중앙값이며, 신호 간 편차로 오차율을 계산했어요. ${k === "en" ? "미국·유럽" : "유럽 Cardmarket"} 거래 기준(미등급, NM)이라 국내 시세와 다를 수 있어요.${est.src.cm && est.src.cm.updated ? ` 갱신 ${esc(est.src.cm.updated.slice(0, 10))}.` : ""}</p>`
       : `<div class="big"><b class="none">---</b></div><p class="note">이 카드는 아직 거래 데이터가 없어요. 오래된 프로모나 비매품일 수 있어요.</p>`);
   }
   if (!d) return head + `<div class="big"><b class="skel" style="display:inline-block;width:150px;height:36px;border-radius:8px"></b></div><p class="note">같은 그림의 ${label} 카드를 찾는 중이에요.</p>`;
@@ -939,7 +1016,7 @@ function makeHolo(card, { intro = false, idle = true } = {}) {
   el.setAttribute("role", "img");
   el.setAttribute("aria-label", `${card.name} 카드 이미지. 마우스나 손가락으로 기울여 볼 수 있어요`);
   el.innerHTML = `<div class="rot">
-      <img class="art" src="${esc(img(card.image, "high"))}" alt="" draggable="false" crossorigin="anonymous" referrerpolicy="no-referrer">
+      <img class="art" src="${esc(img(card.image, "high"))}" alt="" draggable="false"${/pokemon-card\.com/.test(card.image || "") ? "" : ` crossorigin="anonymous"`} referrerpolicy="no-referrer">
       <div class="layer shine"></div><div class="layer glitter"></div><div class="layer glare"></div><div class="layer edge"></div>
     </div>`;
   const art = el.querySelector("img.art");
@@ -1066,7 +1143,7 @@ const RACK_RARITIES = Object.keys(RAR).filter(k => RAR[k][0] >= 10);
 const RACK_SIZE = 14;
 const RACK_IDS = ["swsh7-215", "swsh11-186", "swsh8-271", "swsh7-218", "sv08.5-161", "sv04.5-232", "neo1-9", "swsh9-154",
   "sv03.5-199", "sv08-238", "swsh8-270", "swsh4-188", "sv06-214", "base1-2", "base1-4", "sma-SV49"];
-let homeFilter = { kind: "all", serie: "all", q: "" };
+let homeFilter = { ed: ls.get("homeEd", "en") === "ja" ? "ja" : "en", kind: "all", serie: "all", q: "" };
 let rack = null;
 async function renderHome(token) {
   const v = $("#view");
@@ -1094,6 +1171,9 @@ async function renderHome(token) {
     </div>
   </section>
   <div class="toolbar">
+    <div class="seg ed" role="group" aria-label="판본">
+      <button data-hed="en">북미판</button><button data-hed="ja">일본판</button>
+    </div>
     <div class="seg" role="group" aria-label="종류">
       <button data-kind="all">전체</button><button data-kind="main">확장팩</button><button data-kind="promo">프로모</button><button data-kind="other">기타</button>
     </div>
@@ -1112,11 +1192,26 @@ async function renderHome(token) {
     b.onclick = () => { homeFilter.kind = b.dataset.kind; $$("[data-kind]").forEach(x => x.setAttribute("aria-pressed", x === b)); drawSets(); };
   });
 
+  $$("[data-hed]").forEach(b => {
+    b.setAttribute("aria-pressed", b.dataset.hed === homeFilter.ed);
+    b.onclick = () => {
+      if (homeFilter.ed === b.dataset.hed) return;
+      homeFilter.ed = b.dataset.hed; homeFilter.serie = "all"; ls.set("homeEd", homeFilter.ed);
+      $$("[data-hed]").forEach(x => x.setAttribute("aria-pressed", x === b));
+      $("#setList").innerHTML = skeletonSets(); $("#serieChips").innerHTML = "";
+      loadHomeSets(renderToken);
+    };
+  });
+
   document.title = "TCG도감 · 포켓몬 카드 도감과 시세";
   loadRack(token);
+  loadHomeSets(token);
+}
+async function loadHomeSets(token) {
+  const ed = homeFilter.ed;
   try {
-    const cat = await loadCatalog();
-    if (token !== renderToken) return;
+    const cat = await loadCatalog(ed);
+    if (token !== renderToken || ed !== homeFilter.ed) return;
     const allSets = cat.flatMap(s => s.sets);
     countUp($("#stSets"), allSets.length);
     countUp($("#stCards"), allSets.reduce((a, s) => a + (s.cardCount && s.cardCount.total || 0), 0));
@@ -1343,12 +1438,12 @@ function skeletonSets() {
 }
 function favCountBySet() { const m = {}; for (const k in FAVS) { const s = FAVS[k].setId; m[s] = (m[s] || 0) + 1; } return m; }
 function drawSets() {
-  const box = $("#setList"); if (!box || !CATALOG) return;
+  const box = $("#setList"), CATALOG = CATS[homeFilter.ed]; if (!box || !CATALOG) return;
   const q = homeFilter.q.trim().toLowerCase();
   const fc = favCountBySet();
   let i = 0;
   const html = CATALOG.filter(s => homeFilter.serie === "all" || s.id === homeFilter.serie).map(s => {
-    const sets = s.sets.filter(x => (homeFilter.kind === "all" || x.kind === homeFilter.kind) && (!q || x.name.toLowerCase().includes(q) || x.id.toLowerCase().includes(q) || s.ko.includes(q)));
+    const sets = s.sets.filter(x => (homeFilter.kind === "all" || x.kind === homeFilter.kind) && (!q || x.name.toLowerCase().includes(q) || (x.en || "").toLowerCase().includes(q) || rawId(x.id).toLowerCase().includes(q) || s.ko.includes(q)));
     if (!sets.length) return "";
     return `<section class="series"><div class="series-head"><h2>${esc(s.ko)}</h2><span>${esc(s.name)} · ${esc((s.date || "").slice(0, 4))}~</span></div>
       <div class="set-grid">${sets.map(x => setTile(x, i++, fc[x.id])).join("")}</div></section>`;
@@ -1359,7 +1454,7 @@ function setTile(x, i, fav) {
   const lg = logo(x.logo);
   return `<a class="set-tile" href="#/set/${encodeURIComponent(x.id)}" style="--i:${i}" data-setid="${esc(x.id)}">
     <div class="set-logo">${lg ? `<img src="${esc(lg)}" alt="${esc(x.name)} 로고" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'fallback',textContent:this.alt.replace(' 로고','')}))">` : `<div class="fallback">${esc(x.name)}</div>`}</div>
-    <div class="set-meta"><div class="name">${esc(x.name)}${x.kind === "promo" ? `<span class="tag">프로모</span>` : ""}<div class="sub">${esc(x.id)}${fav ? ` · <span style="color:var(--accent)">♥ ${fav}</span>` : ""}</div></div>
+    <div class="set-meta"><div class="name">${esc(x.name)}${x.kind === "promo" ? `<span class="tag">프로모</span>` : ""}<div class="sub">${esc(rawId(x.id))}${x.en ? ` · ${esc(x.en)}` : ""}${fav ? ` · <span style="color:var(--accent)">♥ ${fav}</span>` : ""}</div></div>
     <div class="count">${x.cardCount ? x.cardCount.total : "-"}장</div></div></a>`;
 }
 document.addEventListener("click", e => {
@@ -1378,12 +1473,12 @@ async function renderSet(id, token) {
     <section class="set-hero"><div class="logo-box" id="setLogo"></div><div><h1 id="setName">&nbsp;</h1><div class="facts" id="setFacts"></div></div></section>
     <div id="setBody"><div class="progress"><p id="progText">세트 정보를 불러오는 중</p><div class="bar"><i id="progBar"></i></div></div>${skeletonCards(12)}</div>`;
   try {
-    const pre = CATALOG && findSet(id);
+    const pre = findSet(id);
     if (pre) {
       if (pre.logo) $("#setLogo").innerHTML = `<img src="${esc(logo(pre.logo))}" alt="${esc(pre.name)} 로고" style="view-transition-name:setlogo">`;
       $("#setName").textContent = pre.name;
     }
-    if (!CATALOG) loadCatalog().catch(() => {});
+    if (!CATS[edOf(id)]) loadCatalog(edOf(id)).catch(() => {});
     const set = await getSet(id);
     if (token !== renderToken) return;
     if (!set) { v.innerHTML = `<div class="empty"><i class="ph ph-question"></i><h2>세트를 찾을 수 없어요</h2><p>주소가 바뀌었거나 데이터에 없는 세트입니다.</p><a class="btn" href="#/">확장팩 목록으로</a></div>`; return; }
@@ -1392,10 +1487,12 @@ async function renderSet(id, token) {
     $("#setName").textContent = set.name;
     const cc = set.cardCount || {};
     $("#setFacts").innerHTML = [
-      set.serie ? `<span>시리즈 <b>${esc(SERIES_KO[set.serie.id] || set.serie.name)}</b></span>` : "",
+      `<span>판본 <b>${isJa(set.id) ? "일본판" : "북미판"}</b></span>`,
+      set.serie ? `<span>시리즈 <b>${esc((isJa(set.id) ? SERIES_KO_JA : SERIES_KO)[set.serie.id] || set.serie.name)}</b></span>` : "",
+      set.enName ? `<span>영문명 <b>${esc(set.enName)}</b></span>` : "",
       set.releaseDate ? `<span>출시 <b class="num">${esc(set.releaseDate)}</b></span>` : "",
       `<span>카드 <b class="num">${cc.official ?? "-"}</b>${cc.total && cc.total - (set.merged || 0) !== cc.official ? ` + 시크릿 <b class="num">${cc.total - (set.merged || 0) - cc.official}</b>` : ""}${set.merged ? ` + 클래식 복각 <b class="num">${set.merged}</b>` : ""}</span>`,
-      `<span>코드 <b class="num">${esc(set.id)}</b></span>`
+      `<span>코드 <b class="num">${esc(rawId(set.id))}</b></span>`
     ].join("");
     document.title = `${set.name} · TCG도감`;
     const list = set.cards || [];
@@ -1500,23 +1597,28 @@ function wireImages(root) {
 /* ================= search ================= */
 async function renderSearch(q, token) {
   const v = $("#view");
-  const en = koToEn(q);
+  const kana = /[\u3040-\u30ff]/.test(q);
+  const en = koToEn(q), ja = koToJa(q) || (kana ? q : null);
   v.innerHTML = `<button class="back" onclick="location.hash='#/'"><i class="ph ph-arrow-left"></i>확장팩 목록</button>
-    <section class="set-hero" style="grid-template-columns:1fr"><div><h1>“${esc(q)}” 카드 검색</h1><div class="facts">${en ? `<span>영문명 <b>${esc(en)}</b>(으)로 찾는 중</span>` : `<span>모든 확장팩과 프로모에서 찾아요</span>`}</div></div></section>
+    <section class="set-hero" style="grid-template-columns:1fr"><div><h1>“${esc(q)}” 카드 검색</h1><div class="facts">${en ? `<span>영문명 <b>${esc(en)}</b></span>` : ""}${ja ? `<span>일본명 <b>${esc(ja)}</b></span>` : ""}${!en && !ja ? `<span>모든 확장팩과 프로모에서 찾아요</span>` : ""}</div></div></section>
     <div id="searchOut">${skeletonCards(12)}</div>`;
   try {
     const term = en || q;
-    const list = await cached("search:" + term.toLowerCase(), 6 * HOUR, () => fetchJSON(`${API}/cards?name=${encodeURIComponent(term)}&pagination:itemsPerPage=120`));
+    const [list, jaList] = await Promise.all([
+      kana && !en ? [] : cached("search:" + term.toLowerCase(), 6 * HOUR, () => fetchJSON(`${API}/cards?name=${encodeURIComponent(term)}&pagination:itemsPerPage=120`)),
+      ja ? cached("search:ja:" + ja, 6 * HOUR, () => fetchJSON(`${API_ROOT}ja/cards?name=${encodeURIComponent(ja)}&pagination:itemsPerPage=120`)).catch(() => []) : [],
+      loadCatalog("en").catch(() => {}), ja ? loadCatalog("ja").catch(() => {}) : null
+    ]);
     if (token !== renderToken) return;
-    if (!CATALOG) await loadCatalog().catch(() => {});
+    const jaCards = await Promise.all((jaList || []).map(jaCard));
     const out = $("#searchOut");
     // Skip TCG Pocket (digital) cards; cards with art first, newest sets first.
-    const cards = (list || []).filter(c => !/^(A\d|B\d|P-A)/.test(c.id)).map(fixCard).reverse().sort((a, b) => (b.image ? 1 : 0) - (a.image ? 1 : 0));
+    const cards = [...(list || []).filter(c => !/^(A\d|B\d|P-A)/.test(c.id)).map(fixCard).reverse(), ...jaCards.reverse()].sort((a, b) => (b.image ? 1 : 0) - (a.image ? 1 : 0));
     if (!cards.length) { out.innerHTML = `<div class="empty"><i class="ph ph-magnifying-glass"></i><h2>찾는 카드가 없어요</h2><p>영문 이름으로도 검색해 보세요. 예: Pikachu, Charizard</p></div>`; return; }
     out.innerHTML = `<p style="color:var(--muted);margin:16px 0">${cards.length}장 · 카드를 누르면 등급과 시세를 확인할 수 있어요</p><div class="card-grid">${cards.map((c, i) => {
       const setId = c.id.slice(0, c.id.lastIndexOf("-")); const s = findSet(setId);
       return `<article class="tile" style="--i:${i}"><div class="face" data-open="${esc(c.id)}" role="button" tabindex="0" aria-label="${esc(c.name)} 자세히 보기">${c.image ? `<img data-src="${esc(img(c.image))}" alt="" loading="lazy">` : `<div class="ph-placeholder">${esc(c.name)}<br>이미지 없음</div>`}</div>
-        <div class="info"><div class="txt"><div class="nm">${esc(c.name)}</div><div class="ko">${esc(s ? s.name : setId)} · ${esc(c.localId)}</div></div>${favBtn(c.id)}</div></article>`;
+        <div class="info"><div class="txt"><div class="nm">${esc(c.name)}</div><div class="ko">${isJa(c.id) ? `<span class="edmark">일본판</span>` : ""}${esc(s ? s.name : rawId(setId))} · ${esc(c.localId)}</div></div>${favBtn(c.id)}</div></article>`;
     }).join("")}</div>`;
     wireImages(out);
   } catch { if (token === renderToken) errorView("검색 결과를 불러오지 못했어요. 인터넷 연결을 확인하세요.", () => render()); }
@@ -1556,7 +1658,7 @@ function renderFavs() {
   $("#refreshFavs").onclick = async e => {
     const b = e.currentTarget; b.disabled = true; b.innerHTML = `<i class="ph ph-arrows-clockwise"></i>새로고침 중`;
     await pool(Object.keys(FAVS), 8, async id => {
-      const c = await fetchJSON(`${API}/cards/${encodeURIComponent(id)}`);
+      const c = await fetchJSON(`${apiFor(id)}/cards/${encodeURIComponent(rawId(id))}`);
       if (c) { idb.set("card:" + id, { t: Date.now(), v: c }); const est = estimate(c); if (FAVS[id]) { FAVS[id].usd = est && est.usd; FAVS[id].err = est && est.err; } }
     });
     ls.set("favs", FAVS); toast("시세를 최신으로 바꿨어요"); renderFavs();
@@ -1631,7 +1733,8 @@ async function openCard(id, origin) {
       <a class="btn ghost" target="_blank" rel="noopener" href="https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${encodeURIComponent(card.name)}"><i class="ph ph-arrow-square-out"></i>Cardmarket</a>
     </div>`;
   // Edition tabs: English is known now, Japanese / Korean fill in when the twin lookup returns.
-  const eds = { en: { est, real: !!est }, ja: null, ko: null };
+  const base = edOf(card.id);
+  const eds = { en: null, ja: null, ko: null, [base]: { est, real: !!est, own: true } };
   const paint = (body = true) => {
     $$("[data-ed]", det).forEach(b => { b.setAttribute("aria-selected", b.dataset.ed === ED_CUR); $("b", b).innerHTML = edTabPrice(eds[b.dataset.ed]); });
     if (!body) return;
@@ -1643,10 +1746,10 @@ async function openCard(id, origin) {
   $$("[data-ed]", det).forEach(b => b.onclick = () => { if (ED_CUR === b.dataset.ed) return; ED_CUR = b.dataset.ed; ls.set("ed", ED_CUR); paint(); });
   modal.repaint = paint;
   paint();
-  editionPrices(card, est).then(p => {
+  editionPrices(card, est, base).then(p => {
     if (!modal || modal.el !== m) return;
     Object.assign(eds, p);
-    paint(ED_CUR !== "en");
+    paint(ED_CUR !== base);
   });
 }
 const eur = v => v > 0 ? "€" + (v >= 100 ? Math.round(v) : v.toFixed(2)) : "-";

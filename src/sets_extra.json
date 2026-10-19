@@ -1,0 +1,788 @@
+{
+"enLogo": {
+"sm3.5": "img/logos/en/sm3.5",
+"sm7.5": "img/logos/en/sm7.5",
+"sv05": "img/logos/en/sv05",
+"30th": "img/logos/en/30th",
+"mfb": "img/logos/en/mfb",
+"rc": "img/logos/en/rc",
+"exu": "img/logos/en/exu",
+"2024sv": "img/logos/en/2024sv",
+"swsh9tg": "https://assets.tcgdex.net/en/swsh/swsh9/logo",
+"swsh10tg": "https://assets.tcgdex.net/en/swsh/swsh10/logo",
+"swsh11tg": "https://assets.tcgdex.net/en/swsh/swsh11/logo",
+"swsh12tg": "https://assets.tcgdex.net/en/swsh/swsh12/logo",
+"swsh12.5gg": "https://assets.tcgdex.net/en/swsh/swsh12.5/logo",
+"swsh4.5sv": "https://assets.tcgdex.net/en/swsh/swsh4.5/logo",
+"cel25cc": "https://assets.tcgdex.net/en/swsh/cel25/logo",
+"sma": "https://assets.tcgdex.net/en/sm/sm115/logo"
+},
+"ja": {
+"PMCG1": {
+"n": "拡張パック",
+"en": "Expansion Pack",
+"d": "1996-10-20",
+"logo": "https://assets.tcgdex.net/en/base/base1/logo"
+},
+"PMCG2": {
+"n": "ポケモンジャングル",
+"en": "Pokémon Jungle",
+"d": "1997-03-05",
+"logo": "https://assets.tcgdex.net/en/base/base2/logo"
+},
+"PMCG3": {
+"n": "化石の秘密",
+"en": "Mystery of the Fossils",
+"d": "1997-06-21",
+"logo": "https://assets.tcgdex.net/en/base/base3/logo"
+},
+"PMCG4": {
+"n": "ロケット団",
+"en": "Rocket Gang",
+"d": "1997-11-21",
+"logo": "https://assets.tcgdex.net/en/base/base5/logo"
+},
+"PMCG5": {
+"n": "リーダーズスタジアム",
+"en": "Leaders' Stadium",
+"d": "1998-10-24",
+"logo": "https://assets.tcgdex.net/en/gym/gym1/logo"
+},
+"PMCG6": {
+"n": "闇からの挑戦",
+"en": "Challenge from the Darkness",
+"d": "1999-06-25",
+"logo": "https://assets.tcgdex.net/en/gym/gym2/logo"
+},
+"neo1": {
+"n": "金、銀、新世界へ...",
+"en": "Gold, Silver, to a New World...",
+"d": "2000-02-04",
+"logo": "https://assets.tcgdex.net/en/neo/neo1/logo"
+},
+"neo2": {
+"n": "遺跡をこえて...",
+"en": "Crossing the Ruins...",
+"d": "2000-07-07",
+"logo": "https://assets.tcgdex.net/en/neo/neo2/logo"
+},
+"neo3": {
+"n": "めざめる伝説",
+"en": "Awakening Legends",
+"d": "2000-11-23",
+"logo": "img/logos/ja/neo3"
+},
+"neo4": {
+"n": "闇、そして光へ...",
+"en": "Darkness, and to Light...",
+"d": "2001-04-20",
+"logo": "img/logos/ja/neo4"
+},
+"VS1": {
+"n": "ポケモンカード★VS",
+"en": "Pokémon Card★VS",
+"d": "2001-07-19",
+"logo": "img/logos/ja/VS1"
+},
+"web1": {
+"n": "ポケモンカード★web",
+"en": "Pokémon Card★web",
+"d": "2001-10-20",
+"logo": "img/logos/ja/web1"
+},
+"E1": {
+"n": "基本拡張パック",
+"en": "Base Expansion Pack",
+"d": "2001-12-01",
+"logo": "https://assets.tcgdex.net/en/ecard/ecard1/logo"
+},
+"E2": {
+"n": "地図にない町",
+"en": "The Town on No Map",
+"d": "2002-03-08",
+"logo": "https://assets.tcgdex.net/en/ecard/ecard2/logo"
+},
+"E3": {
+"n": "海からの風",
+"en": "Wind from the Sea",
+"d": "2002-05-24",
+"logo": "img/logos/ja/E3"
+},
+"E4": {
+"n": "裂けた大地",
+"en": "Split Earth",
+"d": "2002-08-23",
+"logo": "img/logos/ja/E4"
+},
+"E5": {
+"n": "神秘なる山",
+"en": "Mysterious Mountains",
+"d": "2002-10-04",
+"logo": "img/logos/ja/E5"
+},
+"PCG1": {
+"n": "伝説の飛翔",
+"en": "Flight of Legends",
+"d": "2004-04-09",
+"logo": "https://assets.tcgdex.net/en/ex/ex6/logo"
+},
+"PCG2": {
+"n": "蒼空の激突",
+"en": "Clash of the Blue Sky",
+"d": "2004-07-01",
+"logo": null
+},
+"PCG3": {
+"n": "ロケット団の逆襲",
+"en": "Rocket Gang Strikes Back",
+"d": "2004-10-15",
+"logo": "https://assets.tcgdex.net/en/ex/ex7/logo"
+},
+"PCG4": {
+"n": "金の空、銀の海",
+"en": "Golden Sky, Silvery Ocean",
+"d": "2005-04-08",
+"logo": null
+},
+"PCG5": {
+"n": "まぼろしの森",
+"en": "Mirage Forest",
+"d": "2005-06-30",
+"logo": null
+},
+"PCG6": {
+"n": "ホロンの研究塔",
+"en": "Holon Research Tower",
+"d": "2005-10-28",
+"logo": "https://assets.tcgdex.net/en/ex/ex11/logo"
+},
+"PCG7": {
+"n": "ホロンの幻影",
+"en": "Holon Phantom",
+"d": "2006-01-27",
+"logo": "https://assets.tcgdex.net/en/ex/ex13/logo"
+},
+"PCG8": {
+"n": "きせきの結晶",
+"en": "Miracle Crystal",
+"d": "2006-03-10",
+"logo": "https://assets.tcgdex.net/en/ex/ex14/logo"
+},
+"PCG9": {
+"n": "さいはての攻防",
+"en": "Offense and Defense of the Furthest Ends",
+"d": "2006-06-29",
+"logo": null
+},
+"CP1": {
+"n": "マグマ団VSアクア団 ダブルクライシス",
+"en": "Magma Gang VS Aqua Gang: Double Crisis",
+"d": "2015-01-30",
+"logo": "img/logos/ja/CP1"
+},
+"CP2": {
+"n": "伝説キラコレクション",
+"en": "Legendary Shine Collection",
+"d": "2015-07-18",
+"logo": "img/logos/ja/CP2"
+},
+"SM1M": {
+"n": "コレクションムーン",
+"en": "Collection Moon",
+"d": "2016-12-09",
+"logo": "img/logos/ja/SM1M"
+},
+"SM1S": {
+"n": "コレクションサン",
+"en": "Collection Sun",
+"d": "2016-12-09",
+"logo": "img/logos/ja/SM1S"
+},
+"SM2K": {
+"n": "キミを待つ島々",
+"en": "Islands Await You",
+"d": "2017-03-17",
+"logo": "img/logos/ja/SM2K"
+},
+"SM2L": {
+"n": "アローラの月光",
+"en": "Alolan Moonlight",
+"d": "2017-03-17",
+"logo": "img/logos/ja/SM2L"
+},
+"SM3N": {
+"n": "光を喰らう闇",
+"en": "Darkness that Consumes Light",
+"d": "2017-06-16",
+"logo": "img/logos/ja/SM3N"
+},
+"SM3H": {
+"n": "闘う虹を見たか",
+"en": "To Have Seen the Battle Rainbow",
+"d": "2017-06-16",
+"logo": "img/logos/ja/SM3H"
+},
+"SM4A": {
+"n": "超次元の暴獣",
+"en": "Ultradimensional Beasts",
+"d": "2017-09-15",
+"logo": "img/logos/ja/SM4A"
+},
+"SM4S": {
+"n": "覚醒の勇者",
+"en": "Awakened Heroes",
+"d": "2017-09-15",
+"logo": "img/logos/ja/SM4S"
+},
+"SM5M": {
+"n": "ウルトラムーン",
+"en": "Ultra Moon",
+"d": "2017-12-08",
+"logo": "img/logos/ja/SM5M"
+},
+"SM5S": {
+"n": "ウルトラサン",
+"en": "Ultra Sun",
+"d": "2017-12-08",
+"logo": "img/logos/ja/SM5S"
+},
+"SM6": {
+"n": "禁断の光",
+"en": "Forbidden Light",
+"d": "2018-03-02",
+"logo": "img/logos/ja/SM6"
+},
+"SM6a": {
+"n": "ドラゴンストーム",
+"en": "Dragon Storm",
+"d": "2018-04-06",
+"logo": "img/logos/ja/SM6a"
+},
+"SM6b": {
+"n": "チャンピオンロード",
+"en": "Champion Road",
+"d": "2018-05-30",
+"logo": "img/logos/ja/SM6b"
+},
+"SM7": {
+"n": "裂空のカリスマ",
+"en": "Sky-Splitting Charisma",
+"d": "2018-06-01",
+"logo": "img/logos/ja/SM7"
+},
+"SM7a": {
+"n": "迅雷スパーク",
+"en": "Thunderclap Spark",
+"d": "2018-08-03",
+"logo": "img/logos/ja/SM7a"
+},
+"SM7b": {
+"n": "フェアリーライズ",
+"en": "Fairy Rise",
+"d": "2018-08-03",
+"logo": "img/logos/ja/SM7b"
+},
+"SM8": {
+"n": "超爆インパクト",
+"en": "Super-Burst Impact",
+"d": "2018-09-07",
+"logo": "img/logos/ja/SM8"
+},
+"SM8a": {
+"n": "ダークオーダー",
+"en": "Dark Order",
+"d": "2018-10-05",
+"logo": "img/logos/ja/SM8a"
+},
+"SM8b": {
+"n": "GXウルトラシャイニー",
+"en": "GX Ultra Shiny",
+"d": "2018-10-05",
+"logo": "img/logos/ja/SM8b"
+},
+"SM9": {
+"n": "タッグボルト",
+"en": "Tag Bolt",
+"d": "2018-12-07",
+"logo": "img/logos/ja/SM9"
+},
+"SM9a": {
+"n": "ナイトユニゾン",
+"en": "Night Unison",
+"d": "2019-01-11",
+"logo": "img/logos/ja/SM9a"
+},
+"SM9b": {
+"n": "フルメタルウォール",
+"en": "Full Metal Wall",
+"d": "2019-02-01",
+"logo": "img/logos/ja/SM9b"
+},
+"SM10": {
+"n": "ダブルブレイズ",
+"en": "Double Blaze",
+"d": "2019-03-01",
+"logo": "img/logos/ja/SM10"
+},
+"SM10a": {
+"n": "ジージーエンド",
+"en": "GG End",
+"d": "2019-04-05",
+"logo": "img/logos/ja/SM10a"
+},
+"SM10b": {
+"n": "スカイレジェンド",
+"en": "Sky Legend",
+"d": "2019-04-26",
+"logo": "img/logos/ja/SM10b"
+},
+"SM11": {
+"n": "ミラクルツイン",
+"en": "Miracle Twin",
+"d": "2019-05-31",
+"logo": "img/logos/ja/SM11"
+},
+"SM11a": {
+"n": "リミックスバウト",
+"en": "Remix Bout",
+"d": "2019-07-05",
+"logo": "img/logos/ja/SM11a"
+},
+"SM11b": {
+"n": "ドリームリーグ",
+"en": "Dream League",
+"d": "2019-08-02",
+"logo": "img/logos/ja/SM11b"
+},
+"SM12": {
+"n": "オルタージェネシス",
+"en": "Alter Genesis",
+"d": "2019-09-06",
+"logo": "img/logos/ja/SM12"
+},
+"SM12a": {
+"n": "TAG TEAM GX タッグオールスターズ",
+"en": "TAG TEAM GX: Tag All Stars",
+"d": "2019-10-04",
+"logo": "img/logos/ja/SM12a"
+},
+"SM4p": {
+"n": "GXバトルブースト",
+"en": "GX Battle Boost",
+"d": "2017-10-20",
+"logo": "img/logos/ja/SM4p"
+},
+"SM5p": {
+"n": "ウルトラフォース",
+"en": "Ultra Force",
+"d": "2018-01-19",
+"logo": "img/logos/ja/SM5p"
+},
+"SM1p": {
+"n": "サン＆ムーン",
+"en": "Sun & Moon",
+"d": "2017-01-27",
+"logo": "img/logos/ja/SM1p"
+},
+"SM3p": {
+"n": "ひかる伝説",
+"en": "Shining Legends",
+"d": "2017-07-15",
+"logo": "img/logos/ja/SM3p"
+},
+"SM2p": {
+"n": "新たなる試練の向こう",
+"en": "Facing a New Trial",
+"d": "2017-04-21",
+"logo": "img/logos/ja/SM2p"
+},
+"S10P": {
+"n": "スペースジャグラー",
+"en": "Space Juggler",
+"d": "2022-04-08",
+"logo": "img/logos/ja/S10P"
+},
+"S12": {
+"n": "パラダイムトリガー",
+"en": "Paradigm Trigger",
+"d": "2022-10-21",
+"logo": "img/logos/ja/S12"
+},
+"S8": {
+"n": "フュージョンアーツ",
+"en": "Fusion Arts",
+"d": "2021-09-24",
+"logo": "img/logos/ja/S8"
+},
+"S7D": {
+"n": "摩天パーフェクト",
+"en": "Skyscraping Perfection",
+"d": "2021-07-09",
+"logo": "img/logos/ja/S7D"
+},
+"S9": {
+"n": "スターバース",
+"en": "Star Birth",
+"d": "2022-01-14",
+"logo": "img/logos/ja/S9"
+},
+"S11a": {
+"n": "白熱のアルカナ",
+"en": "Incandescent Arcana",
+"d": "2022-09-02",
+"logo": "img/logos/ja/S11a"
+},
+"S11": {
+"n": "ロストアビス",
+"en": "Lost Abyss",
+"d": "2022-07-15",
+"logo": "img/logos/ja/S11"
+},
+"S6H": {
+"n": "白銀のランス",
+"en": "Silver Lance",
+"d": "2021-04-23",
+"logo": "img/logos/ja/S6H"
+},
+"S10a": {
+"n": "ダークファンタズマ",
+"en": "Dark Phantasma",
+"d": "2022-05-13",
+"logo": "img/logos/ja/S10a"
+},
+"S5I": {
+"n": "一撃マスター",
+"en": "Single Strike Master",
+"d": "2021-01-22",
+"logo": "img/logos/ja/S5I"
+},
+"S9a": {
+"n": "バトルリージョン",
+"en": "Battle Region",
+"d": "2022-02-25",
+"logo": "img/logos/ja/S9a"
+},
+"S12a": {
+"n": "VSTARユニバース",
+"en": "VSTAR Universe",
+"d": "2022-12-02",
+"logo": "img/logos/ja/S12a"
+},
+"S8b": {
+"n": "VMAXクライマックス",
+"en": "VMAX Climax",
+"d": "2021-12-03",
+"logo": "img/logos/ja/S8b"
+},
+"S6K": {
+"n": "漆黒のガイスト",
+"en": "Jet-Black Spirit",
+"d": "2021-04-23",
+"logo": "img/logos/ja/S6K"
+},
+"M4": {
+"n": "ニンジャスピナー",
+"en": "Ninja Spinner",
+"d": "2026-03-13",
+"logo": "img/logos/ja/M4"
+},
+"M1S": {
+"n": "メガシンフォニア",
+"en": "Mega Symphonia",
+"d": "2025-08-01",
+"logo": "img/logos/ja/M1S"
+},
+"M2": {
+"n": "インフェルノX",
+"en": "Inferno X",
+"d": "2025-09-26",
+"logo": "img/logos/ja/M2"
+},
+"M-P": {
+"n": "メガ プロモカード",
+"en": "",
+"d": "2025-07-28",
+"logo": null
+},
+"MC": {
+"n": "スタートデッキ100 バトルコレクション",
+"en": "",
+"d": "2025-12-19",
+"logo": null
+},
+"M5": {
+"n": "アビスアイ",
+"en": "Abyss Eye",
+"d": "2026-05-22",
+"logo": "img/logos/ja/M5"
+},
+"M6": {
+"n": "ストームエメラルダ",
+"en": "Storm Emeralda",
+"d": "2026-07-31",
+"logo": "img/logos/ja/M6"
+},
+"M3": {
+"n": "ムニキスゼロ",
+"en": "Nihil Zero",
+"d": "2026-01-23",
+"logo": "img/logos/ja/M3"
+},
+"M2a": {
+"n": "MEGAドリームex",
+"en": "MEGA Dream ex",
+"d": "2025-11-28",
+"logo": "img/logos/ja/M2a"
+},
+"M1L": {
+"n": "メガブレイブ",
+"en": "Mega Brave",
+"d": "2025-08-01",
+"logo": "img/logos/ja/M1L"
+},
+"SV5K": {
+"n": "ワイルドフォース",
+"en": "Wild Force",
+"d": "2024-01-26",
+"logo": "img/logos/ja/SV5K"
+},
+"SV2D": {
+"n": "クレイバースト",
+"en": "Clay Burst",
+"d": "2023-04-14",
+"logo": "img/logos/ja/SV2D"
+},
+"SV11W": {
+"n": "ホワイトフレア",
+"en": "White Flare",
+"d": "2025-06-06",
+"logo": "img/logos/ja/SV11W"
+},
+"SV4K": {
+"n": "古代の咆哮",
+"en": "Ancient Roar",
+"d": "2023-10-27",
+"logo": "img/logos/ja/SV4K"
+},
+"SV1S": {
+"n": "スカーレットex",
+"en": "Scarlet ex",
+"d": "2023-01-20",
+"logo": "img/logos/ja/SV1S"
+},
+"SV7a": {
+"n": "楽園ドラゴーナ",
+"en": "Paradise Dragona",
+"d": "2024-09-13",
+"logo": "img/logos/ja/SV7a"
+},
+"SV8": {
+"n": "超電ブレイカー",
+"en": "Super Electric Breaker",
+"d": "2024-10-18",
+"logo": "img/logos/ja/SV8"
+},
+"SV10": {
+"n": "ロケット団の栄光",
+"en": "Glory of the Rocket Gang",
+"d": "2025-04-18",
+"logo": "img/logos/ja/SV10"
+},
+"SV5M": {
+"n": "サイバージャッジ",
+"en": "Cyber Judge",
+"d": "2024-01-26",
+"logo": "img/logos/ja/SV5M"
+},
+"SV2a": {
+"n": "ポケモンカード151",
+"en": "Pokémon Card 151",
+"d": "2023-06-16",
+"logo": "img/logos/ja/SV2a"
+},
+"SV7": {
+"n": "ステラミラクル",
+"en": "Stellar Miracle",
+"d": "2024-07-19",
+"logo": "img/logos/ja/SV7"
+},
+"SV2P": {
+"n": "スノーハザード",
+"en": "Snow Hazard",
+"d": "2023-04-14",
+"logo": "img/logos/ja/SV2P"
+},
+"SVK": {
+"n": "デッキビルドBOX ステラミラクル",
+"en": "Stellar Miracle",
+"d": "2024-07-19",
+"logo": "img/logos/ja/SVK"
+},
+"SVLS": {
+"n": "スターターセット テラスタイプ：ステラ ソウブレイズex",
+"en": "",
+"d": "2024-08-30",
+"logo": null
+},
+"SVLN": {
+"n": "スターターセット テラスタイプ：ステラ ニンフィアex",
+"en": "",
+"d": "2024-08-30",
+"logo": null
+},
+"SV1a": {
+"n": "トリプレットビート",
+"en": "Triplet Beat",
+"d": "2023-03-10",
+"logo": "img/logos/ja/SV1a"
+},
+"SV8a": {
+"n": "テラスタルフェスex",
+"en": "Terastal Fest ex",
+"d": "2024-12-06",
+"logo": "img/logos/ja/SV8a"
+},
+"SV5a": {
+"n": "クリムゾンヘイズ",
+"en": "Crimson Haze",
+"d": "2024-03-22",
+"logo": "img/logos/ja/SV5a"
+},
+"SV3": {
+"n": "黒炎の支配者",
+"en": "Ruler of the Black Flame",
+"d": "2023-07-28",
+"logo": "img/logos/ja/SV3"
+},
+"SV9a": {
+"n": "熱風のアリーナ",
+"en": "Hot Wind Arena",
+"d": "2025-03-14",
+"logo": "img/logos/ja/SV9a"
+},
+"SV6a": {
+"n": "ナイトワンダラー",
+"en": "Night Wanderer",
+"d": "2024-06-07",
+"logo": "img/logos/ja/SV6a"
+},
+"SV3a": {
+"n": "レイジングサーフ",
+"en": "Raging Surf",
+"d": "2023-09-22",
+"logo": "img/logos/ja/SV3a"
+},
+"SV6": {
+"n": "変幻の仮面",
+"en": "Transformation Mask",
+"d": "2024-04-26",
+"logo": "img/logos/ja/SV6"
+},
+"SV-P": {
+"n": "スカーレット&バイオレット プロモカード",
+"en": "",
+"d": "2022-11-29",
+"logo": null
+},
+"SV4a": {
+"n": "シャイニートレジャーex",
+"en": "Shiny Treasure ex",
+"d": "2023-12-01",
+"logo": "img/logos/ja/SV4a"
+},
+"SV4M": {
+"n": "未来の一閃",
+"en": "Future Flash",
+"d": "2023-10-27",
+"logo": "img/logos/ja/SV4M"
+},
+"SV11B": {
+"n": "ブラックボルト",
+"en": "Black Bolt",
+"d": "2025-06-06",
+"logo": "img/logos/ja/SV11B"
+},
+"SV9": {
+"n": "バトルパートナーズ",
+"en": "Battle Partners",
+"d": "2025-01-24",
+"logo": "img/logos/ja/SV9"
+},
+"SV1V": {
+"n": "バイオレットex",
+"en": "Violet ex",
+"d": "2023-01-20",
+"logo": "img/logos/ja/SV1V"
+}
+},
+"jaEmpty": [
+"ADV1",
+"ADV2",
+"ADV3",
+"ADV4",
+"ADV5",
+"CP3",
+"CP4",
+"CP5",
+"CP6",
+"CS1.5",
+"CS1a",
+"CS1b",
+"CS2.5",
+"CS2a",
+"CS2b",
+"CS3.5",
+"CS3D",
+"CS3a",
+"CS3b",
+"CS4",
+"CS4Da",
+"CS4a",
+"CS4b",
+"CSA",
+"L1a",
+"L1b",
+"L2",
+"L3",
+"LL",
+"PCG10",
+"S10D",
+"S10b",
+"S1H",
+"S1W",
+"S1a",
+"S2",
+"S2a",
+"S3",
+"S3a",
+"S4",
+"S4a",
+"S5R",
+"S5a",
+"S6a",
+"S7R",
+"S8a",
+"SM0",
+"SM1+",
+"SM3+",
+"SM4+",
+"SM5+",
+"SMP2",
+"XY10",
+"XY11a",
+"XY11b",
+"XY1a",
+"XY1b",
+"XY2",
+"XY3",
+"XY4",
+"XY5a",
+"XY5b",
+"XY6",
+"XY7",
+"XY8a",
+"XY8b",
+"XY9",
+"sm2+"
+]
+}
