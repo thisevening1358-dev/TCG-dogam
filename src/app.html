@@ -69,6 +69,7 @@ input{font:inherit;color:inherit}
 .icon-btn:active{transform:scale(.92)}
 .seg{display:flex;padding:3px;background:var(--surface-2);border-radius:999px;font-size:13px;font-weight:600}
 .seg button{padding:6px 11px;border-radius:999px;color:var(--muted);transition:background .25s,color .25s}
+.seg.cur button{display:grid;place-items:center;padding:6px 10px;font-size:16px}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px var(--shadow)}
 
 /* ---------- Hero ---------- */
@@ -277,6 +278,24 @@ input{font:inherit;color:inherit}
 .rpill{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:6px 12px 6px 10px;border-radius:999px;background:var(--surface-2);font-size:13px;font-weight:600}
 .pbox{margin-top:24px;padding:20px;border-radius:var(--r-panel);background:var(--bg);border:1px solid var(--line)}
 .pbox small{font-size:12px;color:var(--muted)}
+.edtabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;margin:-8px -8px 16px;background:var(--surface-2);border-radius:14px}
+.edtabs button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;padding:8px 10px;border-radius:11px;color:var(--muted);text-align:left;transition:background .25s,color .25s,box-shadow .25s}
+.edtabs button span{font-size:12px;font-weight:600}
+.edtabs button b{max-width:100%;font-family:var(--font-mono);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.edtabs button b i{font-family:var(--font-body,inherit);font-style:normal;font-size:10px;font-weight:600;margin-left:4px;color:var(--faint)}
+.edtabs button b .ld{font-family:var(--font-body,inherit);font-size:11px;font-weight:500;color:var(--faint)}
+.edtabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px var(--shadow)}
+.edtabs button:active{transform:scale(.98)}
+.edbody.in{animation:rkIn .45s var(--ease-out) both}
+.edtag{align-self:center;font-family:var(--font-body,inherit)!important;font-size:11px!important;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted)!important}
+.edtag.real{background:var(--accent-soft);color:var(--accent)!important}
+.pbox .big b.none{color:var(--faint);font-weight:500;letter-spacing:.08em}
+.twin{display:flex;align-items:center;gap:10px;margin:2px 0 12px;padding:8px;border-radius:12px;background:var(--surface-2);min-width:0}
+.twin img{width:34px;aspect-ratio:63/88;object-fit:cover;border-radius:3px;flex-shrink:0}
+.twin div{display:flex;flex-direction:column;min-width:0;font-size:13px}
+.twin small{font-size:11px}
+.twin b,.twin span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.twin span{color:var(--muted);font-size:12px}
 .gbox{margin-top:12px;padding:16px 20px 14px;border-radius:var(--r-panel);background:var(--bg);border:1px solid var(--line)}
 .gbox-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .gbox-head small{font-size:12px;color:var(--muted)}
@@ -395,9 +414,12 @@ footer a{color:var(--muted)}
   .set-hero{grid-template-columns:1fr}
   .facts-grid{grid-template-columns:1fr 1fr}
   .glist{grid-template-columns:1fr}
+  .edtabs button{padding:8px}
+  .edtabs button b{font-size:12px}
+  .edtabs button b i{display:none}
   .search input{padding-right:16px}
   .search .go{display:none}
-  .seg.cur button{padding:6px 9px}
+  .seg.cur button{padding:6px 8px}
   .rk-hint{display:none}
 }
 @media (prefers-reduced-motion:reduce){
@@ -416,9 +438,9 @@ footer a{color:var(--muted)}
     </nav>
     <div class="top-actions">
       <div class="seg cur" role="group" aria-label="통화">
-        <button data-cur="KRW" aria-pressed="true">₩</button>
-        <button data-cur="USD" aria-pressed="false">$</button>
-        <button data-cur="EUR" aria-pressed="false">€</button>
+        <button data-cur="KRW" aria-pressed="true" aria-label="원화" title="원화"><i class="ph ph-currency-krw"></i></button>
+        <button data-cur="USD" aria-pressed="false" aria-label="미국 달러" title="미국 달러"><i class="ph ph-currency-dollar"></i></button>
+        <button data-cur="JPY" aria-pressed="false" aria-label="엔화" title="엔화"><i class="ph ph-currency-jpy"></i></button>
       </div>
       <button class="icon-btn" id="themeBtn" aria-label="테마 바꾸기"><i class="ph ph-circle-half"></i></button>
     </div>
@@ -524,8 +546,31 @@ async function pool(items, n, fn, onEach) {
 /* ================= data ================= */
 const EXCLUDED_SERIES = new Set(["tcgp"]);
 const SERIES_KO = { misc:"기타", base:"베이스", gym:"체육관", neo:"네오", lc:"레전더리 컬렉션", ecard:"e카드", ex:"EX", pop:"POP", tk:"트레이너 키트", dp:"다이아몬드&펄", pl:"플라티나", hgss:"하트골드&소울실버", col:"콜 오브 레전드", bw:"블랙&화이트", mc:"맥도날드 컬렉션", xy:"XY", sm:"썬&문", swsh:"소드&실드", sv:"스칼렛&바이올렛", me:"메가 진화" };
-const getCard = id => cached("card:" + id, 12 * HOUR, () => fetchJSON(`${API}/cards/${encodeURIComponent(id)}`));
-const getSet = id => cached("set:" + id, 24 * HOUR, () => fetchJSON(`${API}/sets/${encodeURIComponent(id)}`));
+/* TCGdex splits the 30th anniversary release in two (main set + Classic Collection reprints); the site shows one set.
+   The reprints have no art or Pokédex numbers on TCGdex, so they use local scans and a hand-made dex map. */
+const SET_MERGE = { "30th": ["30th-c"] };
+const SET_ALIAS = { "30th-c": "30th" };
+const SET_NAME = { "30th": "30th Celebration (30주년)" };
+const CLASSIC_DEX = { "001":[6], "002":[301], "003":[376], "004":[649], "006":[248], "007":[215], "008":[25, 644], "009":[658], "010":[480], "011":[169],
+  "012":[243], "013":[794], "014":[25], "015":[39], "016":[384], "017":[791], "018":[94], "019":[491, 488], "020":[491, 488], "022":[484], "023":[282],
+  "024":[251], "025":[212], "026":[151], "027":[493], "028":[888], "029":[249], "030":[129] };
+function fixCard(c) {
+  if (!c || !/^30th-c-/.test(c.id)) return c;
+  const n = c.id.slice(-3);
+  return { ...c, image: c.image || `img/30th-c/${n}`, localId: "CC" + n, _sortN: 10000 + +n,
+    rarity: c.rarity && c.rarity !== "None" ? c.rarity : "Classic Collection", dexId: c.dexId || CLASSIC_DEX[n] };
+}
+const getCard = id => cached("card:" + id, 12 * HOUR, () => fetchJSON(`${API}/cards/${encodeURIComponent(id)}`)).then(fixCard);
+const getSet = id => cached("set3:" + id, 24 * HOUR, async () => {
+  const s = await fetchJSON(`${API}/sets/${encodeURIComponent(id)}`);
+  if (s && SET_MERGE[id]) {
+    const subs = await Promise.all(SET_MERGE[id].map(x => fetchJSON(`${API}/sets/${x}`).catch(() => null)));
+    subs.forEach(x => { if (x && x.cards) { s.cards = [...(s.cards || []), ...x.cards]; s.cardCount = { ...s.cardCount, total: (s.cardCount.total || 0) + x.cards.length }; s.merged = (s.merged || 0) + x.cards.length; } });
+  }
+  if (s && SET_NAME[id]) s.name = SET_NAME[id];
+  if (s && s.cards) s.cards = s.cards.map(fixCard);
+  return s;
+});
 
 let CATALOG = null;
 async function loadCatalog() {
@@ -536,8 +581,10 @@ async function loadCatalog() {
   const out = [];
   details.forEach((d, i) => {
     if (!d || !d.sets || !d.sets.length) return;
+    const byId = Object.fromEntries(d.sets.map(s => [s.id, s]));
+    const total = s => (SET_MERGE[s.id] || []).reduce((a, x) => a + (byId[x] && byId[x].cardCount ? byId[x].cardCount.total : 0), s.cardCount ? s.cardCount.total : 0);
     out.push({ id: d.id, name: d.name, ko: SERIES_KO[d.id] || d.name, date: d.releaseDate || "1990-01-01",
-      sets: d.sets.map(s => ({ ...s, serie: d.id, kind: setKind(s, d.id) })) });
+      sets: d.sets.filter(s => !SET_ALIAS[s.id]).map(s => ({ ...s, name: SET_NAME[s.id] || s.name, cardCount: { ...s.cardCount, total: total(s) }, serie: d.id, kind: setKind(s, d.id) })) });
   });
   // Newest series first; side collections (McDonald's, trainer kits, misc) go last.
   const side = id => ["mc", "tk", "misc"].includes(id) ? 1 : 0;
@@ -554,6 +601,7 @@ function setKind(s, serie) {
   return "main";
 }
 function findSet(id) {
+  id = SET_ALIAS[id] || id;
   for (const s of CATALOG || []) for (const x of s.sets) if (x.id === id) return { ...x, serieName: s.name, serieKo: s.ko };
   return null;
 }
@@ -571,7 +619,8 @@ const RAR = {
   "Illustration rare":[8,"일러스트 레어","AR",2], "Full Art Trainer":[8,"풀아트 트레이너","SR",3], "Ultra Rare":[9,"울트라 레어","SR",3], "Shiny Ultra Rare":[9,"샤이니 울트라 레어","SSR",3],
   "Pikachu Rare":[8,"피카츄 레어","",3], "Futuristic Rare":[9,"퓨처리스틱 레어","",3],
   "Special illustration rare":[10,"스페셜 일러스트 레어","SAR",3], "Secret Rare":[10,"시크릿 레어","SR",3], "Black White Rare":[11,"블랙·화이트 레어","BWR",3],
-  "Hyper rare":[11,"하이퍼 레어","UR",3], "Crown":[11,"크라운 레어","",3], "Mega Hyper Rare":[12,"메가 하이퍼 레어","MUR",3]
+  "Hyper rare":[11,"하이퍼 레어","UR",3], "Crown":[11,"크라운 레어","",3], "Mega Hyper Rare":[12,"메가 하이퍼 레어","MUR",3],
+  "Mega Attack Rare":[10,"메가 어택 레어","MA",3], "Triple Rare":[7,"트리플 레어","RRR",2], "Character Rare":[8,"캐릭터 레어","CHR",2], "Character Super Rare":[9,"캐릭터 슈퍼 레어","CSR",3]
 };
 function rarity(card) {
   const r = card && card.rarity || "None";
@@ -583,7 +632,7 @@ function rarity(card) {
 }
 
 /* ================= korean names ================= */
-const KO_PREFIX = { "Mega ":"메가 ", "Radiant ":"찬란한 ", "Alolan ":"알로라 ", "Galarian ":"가라르 ", "Hisuian ":"히스이 ", "Paldean ":"팔데아 ", "Dark ":"다크 ", "Light ":"라이트 ", "Shining ":"빛나는 ", "Team Rocket's ":"로켓단의 " };
+const KO_PREFIX = { "Mega ":"메가 ", "M ":"메가 ", "Radiant ":"찬란한 ", "Alolan ":"알로라 ", "Galarian ":"가라르 ", "Hisuian ":"히스이 ", "Paldean ":"팔데아 ", "Dark ":"다크 ", "Light ":"라이트 ", "Shining ":"빛나는 ", "Team Rocket's ":"로켓단의 " };
 const SUFFIX_RE = /\s?(ex|EX|GX|-GX|V|VMAX|VSTAR|V-UNION|BREAK|LV\.X|Prime|☆|δ|◇|LEGEND)$/;
 function koName(card) {
   if (!card || !card.dexId || !card.dexId.length || typeof KO_NAMES === "undefined") return "";
@@ -604,21 +653,23 @@ function koToEn(q) {
 }
 
 /* ================= money ================= */
-const FX_FALLBACK = { USD: 1, KRW: 1380, EUR: 0.86, date: "기본값" };
+const FX_FALLBACK = { USD: 1, KRW: 1380, EUR: 0.86, JPY: 150, date: "기본값" };
 let FX = ls.get("fx", null) || FX_FALLBACK;
 let CUR = ls.get("cur", "KRW");
+if (!["KRW", "USD", "JPY"].includes(CUR)) CUR = "KRW";
+const CUR_KO = { KRW: "원화 환산", USD: "미국 달러", JPY: "엔화 환산" };
 async function loadFx() {
   try {
-    if (FX && FX.t && Date.now() - FX.t < 12 * HOUR) return;
+    if (FX && FX.t && FX.JPY && Date.now() - FX.t < 12 * HOUR) return;
     const r = await fetchJSON("https://open.er-api.com/v6/latest/USD", 2);
     if (r && r.rates) {
-      FX = { USD: 1, KRW: r.rates.KRW, EUR: r.rates.EUR, date: (r.time_last_update_utc || "").slice(5, 16), t: Date.now() };
+      FX = { USD: 1, KRW: r.rates.KRW, EUR: r.rates.EUR, JPY: r.rates.JPY, date: (r.time_last_update_utc || "").slice(5, 16), t: Date.now() };
       ls.set("fx", FX);
     }
   } catch {}
 }
 function fxLine() {
-  return `1 USD = ₩${Math.round(FX.KRW).toLocaleString("ko-KR")}, 1 EUR = ₩${Math.round(FX.KRW / FX.EUR).toLocaleString("ko-KR")} (${FX.date})`;
+  return `1 USD = ₩${Math.round(FX.KRW).toLocaleString("ko-KR")}, 100 JPY = ₩${Math.round(FX.KRW / FX.JPY * 100).toLocaleString("ko-KR")} (${FX.date})`;
 }
 function money(usd, cur = CUR) {
   if (usd == null || !isFinite(usd)) return "-";
@@ -627,8 +678,8 @@ function money(usd, cur = CUR) {
     const r = v >= 10000 ? Math.round(v / 100) * 100 : v >= 1000 ? Math.round(v / 10) * 10 : Math.max(10, Math.round(v / 10) * 10);
     return "₩" + r.toLocaleString("ko-KR");
   }
-  const sym = cur === "USD" ? "$" : "€";
-  return sym + (v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(2));
+  if (cur === "JPY") return "¥" + Math.max(1, Math.round(v)).toLocaleString("ja-JP");
+  return "$" + (v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(2));
 }
 const median = a => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 /* Estimate: median of every recent signal (Cardmarket trend / 1·7·30-day averages / overall average, TCGPlayer market & mid),
@@ -696,13 +747,95 @@ function gradeEstimates(card, est) {
   const err = Math.min(.9, Math.hypot(est.err, ERA_ERR[era]));
   return { era, err, rows: GRADES.map((g, k) => ({ co: g[0], name: g[1], usd: Math.max(GRADE_FLOOR[k], est.usd * (1 + (m[k] - 1) * damp)) })) };
 }
-function gradeHTML(card, est) {
+function gradeHTML(card, est, ed = "영문판") {
   const g = gradeEstimates(card, est);
   return `<div class="gbox">
-    <div class="gbox-head"><small>등급 카드 시세 (추정)</small>${g.err != null ? `<span>±${Math.round(g.err * 100)}%</span>` : ""}</div>
+    <div class="gbox-head"><small>등급 카드 시세 (${ed} 기준 추정)</small>${g.err != null ? `<span>±${Math.round(g.err * 100)}%</span>` : ""}</div>
     <div class="glist">${g.rows.map((r, k) => `<div class="grow${r.name === "10" && r.co === "PSA" ? " hot" : ""}" style="--i:${k}"><span class="gco">${r.co}</span><span class="gn">${esc(r.name)}</span>${r.usd != null ? `<b>${money(r.usd)}</b>` : `<b class="none">---</b>`}</div>`).join("")}</div>
     <p class="note">${est ? `실제 등급 카드 거래가가 아니라 일반 시세에 ${ERA_KO[g.era]} 카드의 등급별 배율을 곱한 추정치예요. 등급 카드는 개체마다 차이가 커서 실거래가와 크게 다를 수 있어요.` : `일반 시세가 없어 등급 시세도 추정할 수 없어요.`}</p>
   </div>`;
+}
+/* Edition prices. The same print in Japanese or Korean is found on TCGdex by illustrator + Pokédex number, then
+   narrowed by HP, rarity and suffix; its Cardmarket figures are the real price. With no matching data the price is
+   derived from the other edition with a rough discount and a wider error, and is labelled as an estimate. */
+const GQL = "https://api.tcgdex.net/v2/graphql";
+const EDS = [["en", "영문판"], ["ja", "일본판"], ["ko", "한국판"]];
+const ED_KO = Object.fromEntries(EDS);
+const ED_FROM = { ja: ["en", .75], ko: ["ja", .6] };
+let ED_CUR = ls.get("ed", "en");
+if (!ED_KO[ED_CUR]) ED_CUR = "en";
+async function gql(query) {
+  const r = await fetch(GQL, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query }) });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const j = await r.json();
+  if (j.errors) throw new Error(j.errors[0].message);
+  return j.data;
+}
+function findTwin(card, lang) {
+  if (!card.illustrator || !card.dexId || !card.dexId.length) return Promise.resolve({ none: true });
+  return cached(`twin:${lang}:${card.id}`, 3 * 24 * HOUR, async () => {
+    const q = `{ cards(filters:{illustrator:${JSON.stringify(card.illustrator)},dexId:${card.dexId[0]}},pagination:{page:1,count:100}) @locale(lang:"${lang}") { id rarity hp suffix dexId } }`;
+    const list = (await gql(q)).cards || [];
+    const want = rarity(card), same = (a, b) => (a || []).join() === (b || []).join();
+    const scored = list.filter(c => same(c.dexId, card.dexId) && (!card.hp || !c.hp || c.hp === card.hp))
+      .map(c => ({ c, s: (c.rarity === card.rarity ? 4 : 0) - Math.abs(rarity(c).rank - want.rank) + ((c.suffix || "") === (card.suffix || "") ? 1 : 0) }))
+      .filter(x => x.s >= 0).sort((a, b) => b.s - a.s);
+    // Among equally good matches, prefer one that has a price.
+    let best = null;
+    for (const x of scored.filter(x => x.s === scored[0].s).slice(0, 3)) {
+      const f = await fetchJSON(`https://api.tcgdex.net/v2/${lang}/cards/${encodeURIComponent(x.c.id)}`, 2).catch(() => null);
+      if (!f) continue;
+      const slim = { id: f.id, name: f.name, localId: f.localId, rarity: f.rarity, image: f.image, set: f.set && { id: f.set.id, name: f.set.name }, pricing: f.pricing };
+      if (!best) best = slim;
+      if (estimate(slim)) { best = slim; break; }
+    }
+    return best || { none: true };
+  });
+}
+function deriveEd(base, k) {
+  if (!base || !base.est) return null;
+  const err = Math.min(.9, Math.hypot(base.est.err, .35)), u = base.est.usd * k;
+  return { usd: u, err, lo: u * (1 - err), hi: u * (1 + err), src: {}, n: 0 };
+}
+async function editionPrices(card, enEst) {
+  const out = { en: { est: enEst, real: !!enEst } };
+  const twins = await Promise.all(["ja", "ko"].map(l => findTwin(card, l).catch(() => ({ none: true }))));
+  ["ja", "ko"].forEach((l, i) => {
+    const twin = twins[i].none ? null : twins[i], real = twin && estimate(twin);
+    const [from, k] = ED_FROM[l];
+    out[l] = real ? { est: real, real: true, twin } : { est: deriveEd(out[from], k), real: false, twin, from, k };
+  });
+  return out;
+}
+function edTabPrice(d) {
+  if (!d) return `<span class="ld">찾는 중</span>`;
+  if (!d.est) return "---";
+  return esc(money(d.est.usd)) + (d.real ? "" : `<i>추정</i>`);
+}
+function cmSources(cm) {
+  return cm ? `<div><span>Cardmarket 추세가</span><b>${eur(cm.trend)}</b></div><div><span>최근 30일 평균</span><b>${eur(cm.avg30)}</b></div><div><span>최근 7일 평균</span><b>${eur(cm.avg7)}</b></div><div><span>최저 매물</span><b>${eur(cm.low)}</b></div>` : "";
+}
+function edBodyHTML(k, d) {
+  const label = ED_KO[k], head = `<small>${label} 예상 시세 (${CUR_KO[CUR]})</small>`;
+  if (k === "en") {
+    const est = d.est;
+    return head + (est ? `<div class="big"><b>${money(est.usd)}</b><span>±${Math.round(est.err * 100)}%</span></div>${rangeHTML(est)}
+        <div class="sources">
+          ${cmSources(est.src.cm)}
+          ${est.src.tp ? `<div><span>TCGPlayer 마켓</span><b>${usd(est.src.tp.market)}</b></div><div><span>TCGPlayer 범위</span><b>${usd(est.src.tp.low)}~${usd(est.src.tp.high)}</b></div>` : ""}
+        </div>
+        <p class="note">시세 신호 ${est.n}개의 중앙값이며, 신호 간 편차로 오차율을 계산했어요. 미국·유럽 거래 기준(미등급, NM)이라 국내 시세와 다를 수 있어요.${est.src.cm && est.src.cm.updated ? ` 갱신 ${esc(est.src.cm.updated.slice(0, 10))}.` : ""}</p>`
+      : `<div class="big"><b class="none">---</b></div><p class="note">이 카드는 아직 거래 데이터가 없어요. 오래된 프로모나 비매품일 수 있어요.</p>`);
+  }
+  if (!d) return head + `<div class="big"><b class="skel" style="display:inline-block;width:150px;height:36px;border-radius:8px"></b></div><p class="note">같은 그림의 ${label} 카드를 찾는 중이에요.</p>`;
+  const t = d.twin;
+  const twin = t ? `<div class="twin">${t.image ? `<img src="${esc(img(t.image))}" alt="" loading="lazy">` : ""}<div><small>찾은 ${label} 카드</small><b>${esc(t.name)}</b><span>${esc(t.set ? t.set.name : "")} · ${esc(t.localId)}</span></div></div>` : "";
+  if (!d.est) return head + `<div class="big"><b class="none">---</b></div>${twin}<p class="note">${t ? `같은 그림의 ${label} 카드는 찾았지만 거래 데이터가 없고` : `같은 그림의 ${label} 카드를 찾지 못했고`}, 추정할 기준 시세도 없어요.</p>`;
+  const est = d.est;
+  return head + `<div class="big"><b>${money(est.usd)}</b><span>±${Math.round(est.err * 100)}%</span><span class="edtag${d.real ? " real" : ""}">${d.real ? "실거래 시세" : "추정"}</span></div>${rangeHTML(est)}${twin}
+    ${d.real ? `<div class="sources">${cmSources(est.src.cm)}</div>
+      <p class="note">일러스트레이터·포켓몬·HP·레어도로 찾은 ${label} 카드의 Cardmarket(유럽) 시세예요.${est.src.cm && est.src.cm.updated ? ` 갱신 ${esc(est.src.cm.updated.slice(0, 10))}.` : ""}</p>`
+    : `<p class="note">${t ? `같은 그림의 ${label} 카드는 찾았지만 거래 데이터가 없어서` : `${label} 거래 데이터가 없어서`} ${ED_KO[d.from]} 시세의 ${Math.round(d.k * 100)}%로 추정했어요. 판본별 가격 차이는 카드마다 커서 실제와 크게 다를 수 있어요.</p>`}`;
 }
 function priceHTML(est) {
   if (!est) return `<span class="price na">시세 없음</span>`;
@@ -927,7 +1060,10 @@ function errorView(msg, retry) {
 }
 
 /* ================= home ================= */
-// Famous / high-value cards for the home rack; sorted by current estimate once loaded.
+// The home rack is a fresh random draw of MA-or-rarer Pokémon and Supporter (trainer character) cards on every visit.
+// RACK_IDS is the fallback when the rarity lists can't be loaded.
+const RACK_RARITIES = Object.keys(RAR).filter(k => RAR[k][0] >= 10);
+const RACK_SIZE = 14;
 const RACK_IDS = ["swsh7-215", "swsh11-186", "swsh8-271", "swsh7-218", "sv08.5-161", "sv04.5-232", "neo1-9", "swsh9-154",
   "sv03.5-199", "sv08-238", "swsh8-270", "swsh4-188", "sv06-214", "base1-2", "base1-4", "sma-SV49"];
 let homeFilter = { kind: "all", serie: "all", q: "" };
@@ -950,8 +1086,8 @@ async function renderHome(token) {
         <div class="stat"><b class="num" id="stFavs">${Object.keys(FAVS).length}</b><span>내 즐겨찾기</span></div>
       </div>
     </div>
-    <div class="rack" id="rack" tabindex="0" role="group" aria-roledescription="carousel" aria-label="시세 높은 인기 카드">
-      <div class="rk-info" id="rkInfo" aria-live="polite"><div class="rk-rank">인기 카드 불러오는 중</div></div>
+    <div class="rack" id="rack" tabindex="0" role="group" aria-roledescription="carousel" aria-label="MA 이상 레어 카드 랜덤">
+      <div class="rk-info" id="rkInfo" aria-live="polite"><div class="rk-rank">레어 카드 고르는 중</div></div>
       <div class="rk-stage"><div class="rk-track">${Array.from({ length: 7 }, (_, i) => `<div class="rk-card skel" style="transform:translate3d(${i * 50}%,0,${-i * 95}%) rotateY(-24deg)"></div>`).join("")}</div></div>
       <div class="rk-foot"><div class="rk-ticks" id="rkTicks"></div><span class="rk-hint">드래그로 넘기고 눌러서 보기</span>
         <div class="rk-nav"><button id="rkPrev" aria-label="이전 카드"><i class="ph ph-arrow-left"></i></button><button id="rkNext" aria-label="다음 카드"><i class="ph ph-arrow-right"></i></button></div></div>
@@ -1003,16 +1139,26 @@ function countUp(el, n) {
   const f = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 4); el.textContent = Math.round(n * e).toLocaleString("ko-KR"); if (p < 1) requestAnimationFrame(f); };
   requestAnimationFrame(f);
 }
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
+async function rackPool() {
+  const lists = await Promise.all(RACK_RARITIES.map(r =>
+    cached("rar:" + r, 24 * HOUR, () => fetchJSON(`${API}/cards?rarity=eq:${encodeURIComponent(r)}`, 2)).catch(() => [])));
+  const seen = new Set();
+  return lists.flat().filter(c => c && c.image && !/^(A\d|B\d|P-A)/.test(c.id) && !seen.has(c.id) && seen.add(c.id));
+}
 async function loadRack(token) {
   try {
-    const cards = (await pool(RACK_IDS, 8, id => getCard(id))).filter(c => c && c.image);
+    // The list endpoint has no category, so draw extra and drop items, tools, stadiums and energy after loading.
+    let ids = shuffle(await rackPool()).slice(0, RACK_SIZE * 2).map(c => c.id);
+    if (ids.length < 5) ids = shuffle(RACK_IDS.slice());
+    const keep = c => c && c.image && (c.category === "Pokemon" || c.category === "Trainer" && c.trainerType === "Supporter");
+    const cards = (await pool(ids, 8, id => getCard(id).catch(() => null))).filter(keep).slice(0, RACK_SIZE);
     if (token !== renderToken) return;
     const root = $("#rack"); if (!root || !cards.length) return;
     cards.forEach(c => c._est = estimate(c));
-    cards.sort((a, b) => (b._est ? b._est.usd : 0) - (a._est ? a._est.usd : 0));
     if (rack) rack.destroy();
     rack = makeRack(root, cards);
-  } catch { const i = $("#rkInfo"); if (i) i.innerHTML = `<div class="rk-rank">인기 카드를 불러오지 못했어요</div>`; }
+  } catch { const i = $("#rkInfo"); if (i) i.innerHTML = `<div class="rk-rank">카드를 불러오지 못했어요</div>`; }
 }
 /* Rack physics: `pos` is the (fractional) index of the front card, sprung toward `tpos`. The row is an endless loop
    and drifts on its own while idle. Each card also has a `lift` spring; the hovered card targets 1 and its neighbours a smaller wave. */
@@ -1037,7 +1183,7 @@ function makeRack(root, cards) {
     S.sel = i;
     const c = cards[i], est = c._est, r = rarity(c), ko = koName(c);
     info.classList.remove("swap"); void info.offsetWidth; info.classList.add("swap");
-    info.innerHTML = `<div class="rk-rank"><b>#${String(i + 1).padStart(2, "0")}</b> / ${N} 시세 순위</div>
+    info.innerHTML = `<div class="rk-rank"><b>${String(i + 1).padStart(2, "0")}</b> / ${N} · MA 이상 랜덤</div>
       <div class="rk-name">${esc(ko || c.name)}</div>
       <div class="rk-sub">${ko ? esc(c.name) + " · " : ""}${esc(c.set.name)}</div>
       <div class="rk-price">${r.code ? `<span class="rk-code">${esc(r.code)}</span>` : ""}${est ? `<b>${esc(money(est.usd))}</b><span class="err">±${Math.round(est.err * 100)}%</span>` : `<span class="err">시세 정보 없음</span>`}</div>
@@ -1225,6 +1371,7 @@ document.addEventListener("click", e => {
 let setState = { sort: "rarity", rar: "all", q: "" };
 let CURRENT = { cards: [], set: null };
 async function renderSet(id, token) {
+  id = SET_ALIAS[id] || id;
   const v = $("#view");
   setState = { sort: "rarity", rar: "all", q: "" };
   v.innerHTML = `<button class="back" onclick="history.length > 1 ? history.back() : (location.hash='#/')"><i class="ph ph-arrow-left"></i>확장팩 목록</button>
@@ -1247,7 +1394,7 @@ async function renderSet(id, token) {
     $("#setFacts").innerHTML = [
       set.serie ? `<span>시리즈 <b>${esc(SERIES_KO[set.serie.id] || set.serie.name)}</b></span>` : "",
       set.releaseDate ? `<span>출시 <b class="num">${esc(set.releaseDate)}</b></span>` : "",
-      `<span>카드 <b class="num">${cc.official ?? "-"}</b>${cc.total && cc.total !== cc.official ? ` + 시크릿 <b class="num">${cc.total - cc.official}</b>` : ""}</span>`,
+      `<span>카드 <b class="num">${cc.official ?? "-"}</b>${cc.total && cc.total - (set.merged || 0) !== cc.official ? ` + 시크릿 <b class="num">${cc.total - (set.merged || 0) - cc.official}</b>` : ""}${set.merged ? ` + 클래식 복각 <b class="num">${set.merged}</b>` : ""}</span>`,
       `<span>코드 <b class="num">${esc(set.id)}</b></span>`
     ].join("");
     document.title = `${set.name} · TCG도감`;
@@ -1305,7 +1452,8 @@ function drawSetBody() {
   $("#setQ").addEventListener("input", e => { setState.q = e.target.value; drawCards(); });
   drawCards();
 }
-const numSort = (a, b) => (parseInt(a.localId, 10) || 0) - (parseInt(b.localId, 10) || 0) || String(a.localId).localeCompare(String(b.localId));
+const numKey = c => c._sortN ?? (parseInt(c.localId, 10) || 0);
+const numSort = (a, b) => numKey(a) - numKey(b) || String(a.localId).localeCompare(String(b.localId));
 function drawCards() {
   const out = $("#cardsOut"); if (!out) return;
   const q = setState.q.trim().toLowerCase();
@@ -1337,7 +1485,7 @@ function tileHTML(c, official, i) {
     <div class="info"><div class="txt">
       <div class="nm" title="${esc(c.name)}">${esc(c.name)}</div>
       ${c._ko ? `<div class="ko">${esc(c._ko)}</div>` : ""}
-      <div class="row"><span class="no">${esc(c.localId)}${official ? "/" + official : ""}</span>${priceHTML(c._e)}</div>
+      <div class="row"><span class="no">${esc(c.localId)}${official && /^\d/.test(c.localId) ? "/" + official : ""}</span>${priceHTML(c._e)}</div>
     </div>${favBtn(c.id)}</div>
   </article>`;
 }
@@ -1363,7 +1511,7 @@ async function renderSearch(q, token) {
     if (!CATALOG) await loadCatalog().catch(() => {});
     const out = $("#searchOut");
     // Skip TCG Pocket (digital) cards; cards with art first, newest sets first.
-    const cards = (list || []).filter(c => !/^(A\d|B\d|P-A)/.test(c.id)).reverse().sort((a, b) => (b.image ? 1 : 0) - (a.image ? 1 : 0));
+    const cards = (list || []).filter(c => !/^(A\d|B\d|P-A)/.test(c.id)).map(fixCard).reverse().sort((a, b) => (b.image ? 1 : 0) - (a.image ? 1 : 0));
     if (!cards.length) { out.innerHTML = `<div class="empty"><i class="ph ph-magnifying-glass"></i><h2>찾는 카드가 없어요</h2><p>영문 이름으로도 검색해 보세요. 예: Pikachu, Charizard</p></div>`; return; }
     out.innerHTML = `<p style="color:var(--muted);margin:16px 0">${cards.length}장 · 카드를 누르면 등급과 시세를 확인할 수 있어요</p><div class="card-grid">${cards.map((c, i) => {
       const setId = c.id.slice(0, c.id.lastIndexOf("-")); const s = findSet(setId);
@@ -1461,21 +1609,15 @@ async function openCard(id, origin) {
   stage.insertAdjacentHTML("beforeend", `<div class="hint"><i class="ph ph-hand-pointing"></i>카드 위에서 움직이거나 끌어서 기울여 보세요</div>`);
   if (typeof DeviceOrientationEvent !== "undefined" && matchMedia("(pointer: coarse)").matches) setupGyro(stage, holo);
   const off = card.set && card.set.cardCount && card.set.cardCount.official;
-  const range = est ? rangeHTML(est) : "";
-  m.querySelector(".detail").innerHTML = `
-    <div class="set-line"><a href="#/set/${encodeURIComponent(card.set.id)}" style="color:inherit;font-weight:600">${esc(card.set.name)}</a><span class="num">${esc(card.localId)}${off ? "/" + off : ""}</span></div>
+  const det = m.querySelector(".detail");
+  det.innerHTML = `
+    <div class="set-line"><a href="#/set/${encodeURIComponent(card.set.id)}" style="color:inherit;font-weight:600">${esc(card.set.name)}</a><span class="num">${esc(card.localId)}${off && /^\d/.test(card.localId) ? "/" + off : ""}</span></div>
     <h2>${esc(card.name)}</h2>
     ${ko ? `<div class="ko-name">${esc(ko)}</div>` : ""}
     <div class="rpill"><span class="gem" data-t="${r.tier}"></span>${esc(r.ko)}${r.code ? ` · ${esc(r.code)}` : ""}<span style="color:var(--faint);font-weight:400">${esc(r.key)}</span></div>
     <div class="pbox">
-      <small>예상 시세 (${CUR === "KRW" ? "원화 환산" : CUR})</small>
-      ${est ? `<div class="big"><b>${money(est.usd)}</b><span>±${Math.round(est.err * 100)}%</span></div>${range}
-        <div class="sources">
-          ${est.src.cm ? `<div><span>Cardmarket 추세가</span><b>${eur(est.src.cm.trend)}</b></div><div><span>최근 30일 평균</span><b>${eur(est.src.cm.avg30)}</b></div><div><span>최근 7일 평균</span><b>${eur(est.src.cm.avg7)}</b></div><div><span>최저 매물</span><b>${eur(est.src.cm.low)}</b></div>` : ""}
-          ${est.src.tp ? `<div><span>TCGPlayer 마켓</span><b>${usd(est.src.tp.market)}</b></div><div><span>TCGPlayer 범위</span><b>${usd(est.src.tp.low)}~${usd(est.src.tp.high)}</b></div>` : ""}
-        </div>
-        <p class="note">시세 신호 ${est.n}개의 중앙값이며, 신호 간 편차로 오차율을 계산했어요. 미국·유럽 거래 기준(미등급, NM)이라 국내 시세와 다를 수 있어요.${est.src.cm && est.src.cm.updated ? ` 갱신 ${esc(est.src.cm.updated.slice(0, 10))}.` : ""}</p>`
-      : `<div class="big"><b style="font-size:22px;color:var(--muted)">시세 정보 없음</b></div><p class="note">이 카드는 아직 거래 데이터가 없어요. 오래된 프로모나 비매품일 수 있어요.</p>`}
+      <div class="edtabs" role="tablist" aria-label="판본별 시세">${EDS.map(([k, l]) => `<button role="tab" data-ed="${k}" aria-selected="false"><span>${l}</span><b></b></button>`).join("")}</div>
+      <div class="edbody" id="edBody"></div>
     </div>
     ${gradeHTML(card, est)}
     <div class="facts-grid">
@@ -1488,6 +1630,24 @@ async function openCard(id, origin) {
       <a class="btn ghost" target="_blank" rel="noopener" href="https://www.tcgplayer.com/search/pokemon/product?q=${encodeURIComponent(card.name + " " + card.set.name)}"><i class="ph ph-arrow-square-out"></i>TCGPlayer</a>
       <a class="btn ghost" target="_blank" rel="noopener" href="https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${encodeURIComponent(card.name)}"><i class="ph ph-arrow-square-out"></i>Cardmarket</a>
     </div>`;
+  // Edition tabs: English is known now, Japanese / Korean fill in when the twin lookup returns.
+  const eds = { en: { est, real: !!est }, ja: null, ko: null };
+  const paint = (body = true) => {
+    $$("[data-ed]", det).forEach(b => { b.setAttribute("aria-selected", b.dataset.ed === ED_CUR); $("b", b).innerHTML = edTabPrice(eds[b.dataset.ed]); });
+    if (!body) return;
+    const box = $("#edBody", det), d = eds[ED_CUR];
+    box.innerHTML = edBodyHTML(ED_CUR, d);
+    box.classList.remove("in"); void box.offsetWidth; box.classList.add("in");
+    $(".gbox", det).outerHTML = gradeHTML(card, d && d.est, ED_KO[ED_CUR]);
+  };
+  $$("[data-ed]", det).forEach(b => b.onclick = () => { if (ED_CUR === b.dataset.ed) return; ED_CUR = b.dataset.ed; ls.set("ed", ED_CUR); paint(); });
+  modal.repaint = paint;
+  paint();
+  editionPrices(card, est).then(p => {
+    if (!modal || modal.el !== m) return;
+    Object.assign(eds, p);
+    paint(ED_CUR !== "en");
+  });
 }
 const eur = v => v > 0 ? "€" + (v >= 100 ? Math.round(v) : v.toFixed(2)) : "-";
 const usd = v => v > 0 ? "$" + (v >= 100 ? Math.round(v) : v.toFixed(2)) : "-";
@@ -1542,6 +1702,7 @@ $("#themeBtn").onclick = () => {
 $$("[data-cur]").forEach(b => b.onclick = () => {
   CUR = b.dataset.cur; ls.set("cur", CUR);
   $$("[data-cur]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  if (modal && modal.repaint) modal.repaint();
   if (route.name === "set" && CURRENT.cards.length && $("#cardsOut")) drawSetBody();
   else if (route.name === "favs") renderFavs();
 });
