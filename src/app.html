@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>TCG도감 · 포켓몬 카드 도감과 시세</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CclipPath id='c'%3E%3Ccircle cx='16' cy='16' r='14'/%3E%3C/clipPath%3E%3C/defs%3E%3Cg clip-path='url(%23c)'%3E%3Crect width='32' height='32' fill='%23fff'/%3E%3Crect width='32' height='14.7' fill='%23E0362A'/%3E%3Crect y='14.7' width='32' height='2.6' fill='%2312141E'/%3E%3C/g%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%2312141E' stroke-width='2.6'/%3E%3Ccircle cx='16' cy='16' r='4.6' fill='%23fff' stroke='%2312141E' stroke-width='2.6'/%3E%3C/svg%3E">
 <meta name="description" content="모든 포켓몬 TCG 확장팩과 프로모 카드, 등급별 리스트와 예상 시세, 홀로 3D 카드 뷰어">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -573,16 +574,24 @@ function fixCard(c) {
 const JP_IMG_BASE = "https://www.pokemon-card.com/assets/images/card_images/large/";
 let JP_IMG = null;
 const loadJpImg = () => JP_IMG || (JP_IMG = fetch("data/jp-img.json").then(r => r.ok ? r.json() : {}).catch(() => ({})));
-async function jpImage(code, localId) {
+const KR_IMG_BASE = "https://cards.image.pokemonkorea.co.kr/data/wmimages/";
+function krImage(code, localId, name) {
+  const f = SET_EXTRA.krImg[code];
+  if (!f || !/^\d+$/.test(localId || "")) return undefined;
+  const n = (name || "").normalize("NFKC");
+  if (SET_EXTRA.jaKo[n] || !JA_NAMES.some(j => n.includes(j))) return undefined;
+  return `${KR_IMG_BASE}${f}/${f.split("/")[1]}_${localId}.png`;
+}
+async function jpImage(code, localId, name) {
   const m = await loadJpImg();
-  return m[code] && m[code][localId] ? JP_IMG_BASE + m[code][localId] : undefined;
+  return m[code] && m[code][localId] ? JP_IMG_BASE + m[code][localId] : krImage(code, localId, name);
 }
 async function jaCard(c) {
   if (!c) return c;
   const code = c.set ? c.set.id : rawId(c.id).slice(0, rawId(c.id).lastIndexOf("-"));
   const x = SET_EXTRA.ja[code] || {};
-  return { ...c, id: "ja:" + rawId(c.id), image: c.image || await jpImage(code, c.localId),
-    set: c.set ? { ...c.set, id: "ja:" + c.set.id, name: x.n || c.set.name } : c.set };
+  return { ...c, id: "ja:" + rawId(c.id), image: c.image || await jpImage(code, c.localId, c.name),
+    set: c.set ? { ...c.set, id: "ja:" + c.set.id, name: x.ko || x.n || c.set.name } : c.set };
 }
 const getCard = id => cached("card:" + id, 12 * HOUR, () => fetchJSON(`${apiFor(id)}/cards/${encodeURIComponent(rawId(id))}`)).then(c => isJa(id) ? jaCard(c) : fixCard(c));
 const getSet = id => isJa(id) ? getJaSet(id) : getEnSet(id);
@@ -592,8 +601,8 @@ async function getJaSet(id) {
   if (!s) return s;
   const x = SET_EXTRA.ja[code] || {};
   const m = (s.cards || []).some(c => !c.image) ? await loadJpImg() : {}, imgs = m[code] || {};
-  return { ...s, id, name: x.n || s.name, enName: x.en, logo: x.logo || s.logo,
-    cards: (s.cards || []).map(c => ({ ...c, id: "ja:" + c.id, image: c.image || (imgs[c.localId] ? JP_IMG_BASE + imgs[c.localId] : undefined) })) };
+  return { ...s, id, name: x.ko || x.n || s.name, enName: x.en, jaName: x.n, logo: x.logo || s.logo,
+    cards: (s.cards || []).map(c => ({ ...c, id: "ja:" + c.id, image: c.image || (imgs[c.localId] ? JP_IMG_BASE + imgs[c.localId] : krImage(code, c.localId, c.name)) })) };
 }
 const getEnSet = id => cached("set3:" + id, 24 * HOUR, async () => {
   const s = await fetchJSON(`${API}/sets/${encodeURIComponent(id)}`);
@@ -624,9 +633,9 @@ async function loadJaCatalog() {
     if (!d || !d.sets) return;
     const sets = d.sets.filter(x => !empty.has(x.id) && !/^CS/.test(x.id)).map(x => {
       const e = SET_EXTRA.ja[x.id] || {};
-      return { ...x, id: "ja:" + x.id, name: e.n || x.name, en: e.en || "", date: e.d || "", logo: e.logo || x.logo, serie: d.id, kind: jaKind(x, e) };
+      return { ...x, id: "ja:" + x.id, name: e.ko || e.n || x.name, en: e.en || "", date: e.d || "", logo: e.logo || x.logo, serie: d.id, kind: jaKind(x, e) };
     }).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-    if (sets.length) out.push({ id: "ja:" + d.id, name: d.name, ko: SERIES_KO_JA[d.id] || d.name, date: sets[0].date, sets });
+    if (sets.length) out.push({ id: "ja:" + d.id, name: "일본판", ko: SERIES_KO_JA[d.id] || d.name, date: sets[0].date, sets });
   });
   out.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   CATS.ja = out;
@@ -671,7 +680,7 @@ function findSet(id) {
   return null;
 }
 // TCGdex image bases get a quality suffix; full image URLs (official Japanese art) are used as is.
-const img = (base, q = "low") => !base ? "" : /\.(jpe?g|png|webp)$/i.test(base) ? base : `${base}/${q}.webp`;
+const img = (base, q = "low") => !base ? "" : base.startsWith(KR_IMG_BASE) ? `${base}?w=${q === "high" ? 800 : 300}` : /\.(jpe?g|png|webp)$/i.test(base) ? base : `${base}/${q}.webp`;
 const logo = base => base ? `${base}.webp` : "";
 
 /* ================= rarity ================= */
@@ -700,7 +709,45 @@ function rarity(card) {
 /* ================= korean names ================= */
 const KO_PREFIX = { "Mega ":"메가 ", "M ":"메가 ", "Radiant ":"찬란한 ", "Alolan ":"알로라 ", "Galarian ":"가라르 ", "Hisuian ":"히스이 ", "Paldean ":"팔데아 ", "Dark ":"다크 ", "Light ":"라이트 ", "Shining ":"빛나는 ", "Team Rocket's ":"로켓단의 " };
 const SUFFIX_RE = /\s?(ex|EX|GX|-GX|V|VMAX|VSTAR|V-UNION|BREAK|LV\.X|Prime|☆|δ|◇|LEGEND)$/;
+const KO_PRE_JA = { "メガ":"메가", "M":"메가", "かがやく":"찬란한", "ひかる":"빛나는", "わるい":"다크", "アローラ":"알로라", "ガラル":"가라르", "ヒスイ":"히스이",
+  "パルデア":"팔데아", "ロケット団の":"로켓단의", "ナンジャモの":"모야모의", "エリカの":"민화의", "カスミの":"이슬의", "タケシの":"웅의", "マリィの":"마리의",
+  "シロナの":"난천의", "リーリエの":"릴리에의", "Nの":"N의", "ホップの":"호브의", "サカキの":"비주기의" };
+const ENERGY_JA = { 草:"풀", 炎:"불꽃", 水:"물", 雷:"번개", 超:"초", 闘:"격투", 悪:"악", 鋼:"강철", 妖:"페어리" };
+// One species chunk ("メガゲンガーex"): the longest Japanese species name inside it, then what is before / after.
+// An unknown owner prefix ("〇〇の") is dropped, the same way English owner names are.
+function speciesKoJa(t) {
+  let best = -1, len = 0, at = 0;
+  for (let i = 0; i < JA_NAMES.length; i++) { const p = t.indexOf(JA_NAMES[i]); if (p >= 0 && JA_NAMES[i].length > len) { best = i; len = JA_NAMES[i].length; at = p; } }
+  if (best < 0) return null;
+  const pre = t.slice(0, at).trim(), post = t.slice(at + len).trim();
+  return [pre && KO_PRE_JA[pre] || "", KO_NAMES[best], /^[A-Za-z.☆δ◇-]+$/.test(post) ? post : ""].filter(Boolean).join(" ");
+}
+function koNameJa(card) {
+  if (typeof JA_NAMES === "undefined") return "";
+  const raw = (card.name || "").normalize("NFKC");
+  if (SET_EXTRA.jaKo[raw]) return SET_EXTRA.jaKo[raw];
+  // δ (delta species) is written "(デルタ種)" in the Japanese data; strip it and add the mark once at the end.
+  const delta = /\(デルタ種\)/.test(raw), n = raw.replace(/\s*\(デルタ種\)/, "");
+  const ko = koNameJaBase(n);
+  return ko && delta ? ko + " δ" : ko;
+}
+function koNameJaBase(n) {
+  if (/^[A-Za-z]/.test(n)) {
+    // Some old Japanese entries carry English names ("Blissey -065/092", "Bugsy's Scizor").
+    const t = n.replace(/\s*-\d+\/\d+$/, ""), tl = t.toLowerCase();
+    let best = -1, len = 0;
+    EN_NAMES.forEach((e, i) => { const at = tl.indexOf(e.toLowerCase()); if (at >= 0 && e.length > len && !/[A-Za-z]/.test(t[at - 1] || "") && !/[A-Za-z]/.test(t[at + e.length] || "")) { best = i; len = e.length; } });
+    if (best >= 0) { const m = t.match(/\s(ex|EX|Ex|Star|☆)$/); return KO_NAMES[best] + (m ? " " + (m[1] === "Star" ? "☆" : m[1].toLowerCase() === "ex" && m[1] !== "EX" ? "ex" : m[1]) : ""); }
+  }
+  const e = n.match(/^基本(.)エネルギー$/);
+  if (e) return ENERGY_JA[e[1]] ? `기본 ${ENERGY_JA[e[1]]} 에너지` : "";
+  const parts = n.split("&").map(x => speciesKoJa(x.trim()));
+  return parts.every(Boolean) ? parts.join(" & ") : "";
+}
+// Name to show first: Japanese cards show their Korean name when one can be made.
+const showName = (c, ko) => isJa(c.id) && ko ? ko : c.name;
 function koName(card) {
+  if (card && isJa(card.id)) return koNameJa(card);
   if (!card || !card.dexId || !card.dexId.length || typeof KO_NAMES === "undefined") return "";
   const base = card.dexId.map(n => KO_NAMES[n - 1]).filter(Boolean).join(" & ");
   if (!base) return "";
@@ -1016,7 +1063,7 @@ function makeHolo(card, { intro = false, idle = true } = {}) {
   el.setAttribute("role", "img");
   el.setAttribute("aria-label", `${card.name} 카드 이미지. 마우스나 손가락으로 기울여 볼 수 있어요`);
   el.innerHTML = `<div class="rot">
-      <img class="art" src="${esc(img(card.image, "high"))}" alt="" draggable="false"${/pokemon-card\.com/.test(card.image || "") ? "" : ` crossorigin="anonymous"`} referrerpolicy="no-referrer">
+      <img class="art" src="${esc(img(card.image, "high"))}" alt="" draggable="false"${/pokemon-card\.com|pokemonkorea/.test(card.image || "") ? "" : ` crossorigin="anonymous"`} referrerpolicy="no-referrer">
       <div class="layer shine"></div><div class="layer glitter"></div><div class="layer glare"></div><div class="layer edge"></div>
     </div>`;
   const art = el.querySelector("img.art");
@@ -1490,6 +1537,7 @@ async function renderSet(id, token) {
       `<span>판본 <b>${isJa(set.id) ? "일본판" : "북미판"}</b></span>`,
       set.serie ? `<span>시리즈 <b>${esc((isJa(set.id) ? SERIES_KO_JA : SERIES_KO)[set.serie.id] || set.serie.name)}</b></span>` : "",
       set.enName ? `<span>영문명 <b>${esc(set.enName)}</b></span>` : "",
+      set.jaName ? `<span>일본명 <b>${esc(set.jaName)}</b></span>` : "",
       set.releaseDate ? `<span>출시 <b class="num">${esc(set.releaseDate)}</b></span>` : "",
       `<span>카드 <b class="num">${cc.official ?? "-"}</b>${cc.total && cc.total - (set.merged || 0) !== cc.official ? ` + 시크릿 <b class="num">${cc.total - (set.merged || 0) - cc.official}</b>` : ""}${set.merged ? ` + 클래식 복각 <b class="num">${set.merged}</b>` : ""}</span>`,
       `<span>코드 <b class="num">${esc(rawId(set.id))}</b></span>`
@@ -1531,7 +1579,7 @@ function drawSetBody() {
     <div class="summary">
       <div class="sum"><small>한 장씩 모두 모을 때 예상 총액</small><b>${priced.length ? money(total) : "-"}</b><span class="err">±${Math.round(totalErr * 100)}% · 시세 있는 카드 ${priced.length}/${cards.length}장</span></div>
       <div class="sum"><small>이 세트 즐겨찾기</small><b>${favN}<span style="font-size:.6em;color:var(--faint)"> / ${cards.length}</span></b><span class="err">하트를 눌러 담아 두세요</span></div>
-      ${top ? `<button class="sum top" data-open="${esc(top.id)}"><img src="${esc(img(top.image))}" alt=""><div><small>최고가 카드</small><div class="nm">${esc(top.name)}</div><b style="font-size:18px">${money(top._e.usd)}</b></div></button>` : `<div class="sum"><small>최고가 카드</small><b>-</b></div>`}
+      ${top ? `<button class="sum top" data-open="${esc(top.id)}"><img src="${esc(img(top.image))}" alt=""><div><small>최고가 카드</small><div class="nm">${esc(showName(top, top._ko))}</div><b style="font-size:18px">${money(top._e.usd)}</b></div></button>` : `<div class="sum"><small>최고가 카드</small><b>-</b></div>`}
     </div>
     <div class="controls">
       <div class="seg" role="group" aria-label="정렬">
@@ -1580,8 +1628,8 @@ function tileHTML(c, official, i) {
       ${c.image ? `<img data-src="${esc(img(c.image))}" alt="" loading="lazy" decoding="async">` : `<div class="ph-placeholder">${esc(c.name)}<br>이미지 없음</div>`}
     </div>
     <div class="info"><div class="txt">
-      <div class="nm" title="${esc(c.name)}">${esc(c.name)}</div>
-      ${c._ko ? `<div class="ko">${esc(c._ko)}</div>` : ""}
+      <div class="nm" title="${esc(showName(c, c._ko))}">${esc(showName(c, c._ko))}</div>
+      ${c._ko && !isJa(c.id) ? `<div class="ko">${esc(c._ko)}</div>` : ""}
       <div class="row"><span class="no">${esc(c.localId)}${official && /^\d/.test(c.localId) ? "/" + official : ""}</span>${priceHTML(c._e)}</div>
     </div>${favBtn(c.id)}</div>
   </article>`;
@@ -1618,7 +1666,7 @@ async function renderSearch(q, token) {
     out.innerHTML = `<p style="color:var(--muted);margin:16px 0">${cards.length}장 · 카드를 누르면 등급과 시세를 확인할 수 있어요</p><div class="card-grid">${cards.map((c, i) => {
       const setId = c.id.slice(0, c.id.lastIndexOf("-")); const s = findSet(setId);
       return `<article class="tile" style="--i:${i}"><div class="face" data-open="${esc(c.id)}" role="button" tabindex="0" aria-label="${esc(c.name)} 자세히 보기">${c.image ? `<img data-src="${esc(img(c.image))}" alt="" loading="lazy">` : `<div class="ph-placeholder">${esc(c.name)}<br>이미지 없음</div>`}</div>
-        <div class="info"><div class="txt"><div class="nm">${esc(c.name)}</div><div class="ko">${isJa(c.id) ? `<span class="edmark">일본판</span>` : ""}${esc(s ? s.name : rawId(setId))} · ${esc(c.localId)}</div></div>${favBtn(c.id)}</div></article>`;
+        <div class="info"><div class="txt"><div class="nm">${esc(showName(c, koName(c)))}</div><div class="ko">${isJa(c.id) ? `<span class="edmark">일본판</span>` : ""}${esc(s ? s.name : rawId(setId))} · ${esc(c.localId)}</div></div>${favBtn(c.id)}</div></article>`;
     }).join("")}</div>`;
     wireImages(out);
   } catch { if (token === renderToken) errorView("검색 결과를 불러오지 못했어요. 인터넷 연결을 확인하세요.", () => render()); }
@@ -1650,7 +1698,7 @@ function renderFavs() {
     <div class="card-grid" style="margin-top:18px" id="favGrid">${sorted.map((f, i) => `
       <article class="tile" data-t="${f.tier || 0}" style="--i:${i}">
         <div class="face" data-open="${esc(f.id)}" role="button" tabindex="0" aria-label="${esc(f.name)} 자세히 보기">${f.image ? `<img data-src="${esc(img(f.image))}" alt="" loading="lazy">` : `<div class="ph-placeholder">${esc(f.name)}</div>`}</div>
-        <div class="info"><div class="txt"><div class="nm">${esc(f.name)}</div><div class="ko">${esc(f.setName || "")}</div>
+        <div class="info"><div class="txt"><div class="nm">${esc(showName(f, f.ko))}</div><div class="ko">${esc(f.setName || "")}</div>
           <div class="row"><span class="no">${esc(f.localId || "")}${f.official ? "/" + f.official : ""}</span>${f.usd ? `<span class="price">${money(f.usd)}<small>±${Math.round((f.err || 0) * 100)}%</small></span>` : `<span class="price na">시세 없음</span>`}</div>
         </div>${favBtn(f.id)}</div>
       </article>`).join("")}</div>`;
@@ -1714,8 +1762,8 @@ async function openCard(id, origin) {
   const det = m.querySelector(".detail");
   det.innerHTML = `
     <div class="set-line"><a href="#/set/${encodeURIComponent(card.set.id)}" style="color:inherit;font-weight:600">${esc(card.set.name)}</a><span class="num">${esc(card.localId)}${off && /^\d/.test(card.localId) ? "/" + off : ""}</span></div>
-    <h2>${esc(card.name)}</h2>
-    ${ko ? `<div class="ko-name">${esc(ko)}</div>` : ""}
+    <h2>${esc(showName(card, ko))}</h2>
+    ${ko && !isJa(card.id) ? `<div class="ko-name">${esc(ko)}</div>` : ""}
     <div class="rpill"><span class="gem" data-t="${r.tier}"></span>${esc(r.ko)}${r.code ? ` · ${esc(r.code)}` : ""}<span style="color:var(--faint);font-weight:400">${esc(r.key)}</span></div>
     <div class="pbox">
       <div class="edtabs" role="tablist" aria-label="판본별 시세">${EDS.map(([k, l]) => `<button role="tab" data-ed="${k}" aria-selected="false"><span>${l}</span><b></b></button>`).join("")}</div>
